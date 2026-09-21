@@ -1,0 +1,5 @@
+fuente,id_evento,filas,ids_repetidos,filas_duplicadas_exactas,ids_con_contenido_distinto
+transmetro,validacion_id,363221,1115,1115,0
+transurbano,(ninguno),832791,,0,
+aerometro,boarding_id,203554,0,0,0
+metroriel,trip_id,299100,0,0,0

@@ -1,0 +1,10 @@
+archivo,size_mb,lineas_totales,bom_utf8,lineas_no_utf8,sha256,tipo,delimitador,n_columnas_encabezado,filas_datos,filas_campos_distintos
+tm_estaciones.csv,0.01,105,False,0,4d53a95abb4f115b7da7f69db2c392e1748d6704807d81408a5e510f791624d0,csv,"','",6.0,104,0.0
+tu_paradas.csv,0.01,329,False,0,a888a09c45189cfeac0a0577377d1b4c662923ee55f798d961f418aa2ac93b90,csv,"','",4.0,328,0.0
+mr_estaciones.csv,0.0,23,False,0,c302ffbc6f0bdcf926c8eaaf9a5427ec5d38d482cc44431e3aeb20a8febb8e8c,csv,"','",4.0,22,0.0
+am_estaciones.csv,0.0,15,False,0,e3acbeed8608fb9a6b9a8df87646bf5294e644aa64bd95484f1424b92ae21723,csv,"','",4.0,14,0.0
+transmetro_validaciones.csv,24.04,363222,False,0,5f88356e427d0ec19b193f6aaafedc288d9bf3fbad1881f011a7d9ea912730d2,csv,"','",7.0,363221,0.0
+aerometro_boardings.csv,12.12,203555,False,0,898b871c6b3457b6b63a522d5dd8966e3a75bcaf215156a65c4a9d211af4cdc7,csv,"','",7.0,203554,0.0
+transurbano_transacciones.csv,43.13,832792,False,0,8ce5028499b7b6c7274fd838430e87d373065d377e5ec1f062a4fa6497083fad,csv,"','",7.0,832791,0.0
+metroriel_viajes.jsonl,55.31,299100,False,0,23feb4a3a55ce506bf34de5faf7834f9c390b7ca70499cc9fb3ec1c3650ebede,jsonl,-,,299100,
+cdc_padron_usuarios.csv,2.15,31051,False,0,68e4d9dd258809dd4a45a0c5f9023ad6f3b5d32912e4447b9d20b9a7258de5c4,csv,"','",7.0,31050,0.0
