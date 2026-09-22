@@ -1,0 +1,329 @@
+cod_parada,descripcion,ruta,sector
+R-101-1,Parada 1 ruta R-101,R-101,Z4
+R-101-2,Parada 2 ruta R-101,R-101,Z6
+R-101-3,Parada 3 ruta R-101,R-101,Z7
+R-101-4,Parada 4 ruta R-101,R-101,Z8
+R-101-5,Parada 5 ruta R-101,R-101,Z9
+R-101-6,Parada 6 ruta R-101,R-101,Z10
+R-101-7,Parada 7 ruta R-101,R-101,Z11
+R-101-8,Parada 8 ruta R-101,R-101,Z12
+R-102-1,Parada 1 ruta R-102,R-102,Z7
+R-102-2,Parada 2 ruta R-102,R-102,Z8
+R-102-3,Parada 3 ruta R-102,R-102,Z9
+R-102-4,Parada 4 ruta R-102,R-102,Z10
+R-102-5,Parada 5 ruta R-102,R-102,Z11
+R-102-6,Parada 6 ruta R-102,R-102,Z12
+R-102-7,Parada 7 ruta R-102,R-102,Z13
+R-102-8,Parada 8 ruta R-102,R-102,Z17
+R-103-1,Parada 1 ruta R-103,R-103,Z9
+R-103-2,Parada 2 ruta R-103,R-103,Z10
+R-103-3,Parada 3 ruta R-103,R-103,Z11
+R-103-4,Parada 4 ruta R-103,R-103,Z12
+R-103-5,Parada 5 ruta R-103,R-103,Z13
+R-103-6,Parada 6 ruta R-103,R-103,Z17
+R-103-7,Parada 7 ruta R-103,R-103,Z18
+R-103-8,Parada 8 ruta R-103,R-103,MIXCO
+R-104-1,Parada 1 ruta R-104,R-104,Z11
+R-104-2,Parada 2 ruta R-104,R-104,Z12
+R-104-3,Parada 3 ruta R-104,R-104,Z13
+R-104-4,Parada 4 ruta R-104,R-104,Z17
+R-104-5,Parada 5 ruta R-104,R-104,Z18
+R-104-6,Parada 6 ruta R-104,R-104,MIXCO
+R-104-7,Parada 7 ruta R-104,R-104,VILLA NUEVA
+R-104-8,Parada 8 ruta R-104,R-104,SAN MIGUEL PETAPA
+R-105-1,Parada 1 ruta R-105,R-105,Z13
+R-105-2,Parada 2 ruta R-105,R-105,Z17
+R-105-3,Parada 3 ruta R-105,R-105,Z18
+R-105-4,Parada 4 ruta R-105,R-105,MIXCO
+R-105-5,Parada 5 ruta R-105,R-105,VILLA NUEVA
+R-105-6,Parada 6 ruta R-105,R-105,SAN MIGUEL PETAPA
+R-105-7,Parada 7 ruta R-105,R-105,Z1
+R-105-8,Parada 8 ruta R-105,R-105,Z4
+R-106-1,Parada 1 ruta R-106,R-106,Z18
+R-106-2,Parada 2 ruta R-106,R-106,MIXCO
+R-106-3,Parada 3 ruta R-106,R-106,VILLA NUEVA
+R-106-4,Parada 4 ruta R-106,R-106,SAN MIGUEL PETAPA
+R-106-5,Parada 5 ruta R-106,R-106,Z1
+R-106-6,Parada 6 ruta R-106,R-106,Z4
+R-106-7,Parada 7 ruta R-106,R-106,Z6
+R-106-8,Parada 8 ruta R-106,R-106,Z7
+R-107-1,Parada 1 ruta R-107,R-107,VILLA NUEVA
+R-107-2,Parada 2 ruta R-107,R-107,SAN MIGUEL PETAPA
+R-107-3,Parada 3 ruta R-107,R-107,Z1
+R-107-4,Parada 4 ruta R-107,R-107,Z4
+R-107-5,Parada 5 ruta R-107,R-107,Z6
+R-107-6,Parada 6 ruta R-107,R-107,Z7
+R-107-7,Parada 7 ruta R-107,R-107,Z8
+R-107-8,Parada 8 ruta R-107,R-107,Z9
+R-108-1,Parada 1 ruta R-108,R-108,Z1
+R-108-2,Parada 2 ruta R-108,R-108,Z4
+R-108-3,Parada 3 ruta R-108,R-108,Z6
+R-108-4,Parada 4 ruta R-108,R-108,Z7
+R-108-5,Parada 5 ruta R-108,R-108,Z8
+R-108-6,Parada 6 ruta R-108,R-108,Z9
+R-108-7,Parada 7 ruta R-108,R-108,Z10
+R-108-8,Parada 8 ruta R-108,R-108,Z11
+R-109-1,Parada 1 ruta R-109,R-109,Z6
+R-109-2,Parada 2 ruta R-109,R-109,Z7
+R-109-3,Parada 3 ruta R-109,R-109,Z8
+R-109-4,Parada 4 ruta R-109,R-109,Z9
+R-109-5,Parada 5 ruta R-109,R-109,Z10
+R-109-6,Parada 6 ruta R-109,R-109,Z11
+R-109-7,Parada 7 ruta R-109,R-109,Z12
+R-109-8,Parada 8 ruta R-109,R-109,Z13
+R-110-1,Parada 1 ruta R-110,R-110,Z8
+R-110-2,Parada 2 ruta R-110,R-110,Z9
+R-110-3,Parada 3 ruta R-110,R-110,Z10
+R-110-4,Parada 4 ruta R-110,R-110,Z11
+R-110-5,Parada 5 ruta R-110,R-110,Z12
+R-110-6,Parada 6 ruta R-110,R-110,Z13
+R-110-7,Parada 7 ruta R-110,R-110,Z17
+R-110-8,Parada 8 ruta R-110,R-110,Z18
+R-111-1,Parada 1 ruta R-111,R-111,Z10
+R-111-2,Parada 2 ruta R-111,R-111,Z11
+R-111-3,Parada 3 ruta R-111,R-111,Z12
+R-111-4,Parada 4 ruta R-111,R-111,Z13
+R-111-5,Parada 5 ruta R-111,R-111,Z17
+R-111-6,Parada 6 ruta R-111,R-111,Z18
+R-111-7,Parada 7 ruta R-111,R-111,MIXCO
+R-111-8,Parada 8 ruta R-111,R-111,VILLA NUEVA
+R-112-1,Parada 1 ruta R-112,R-112,Z12
+R-112-2,Parada 2 ruta R-112,R-112,Z13
+R-112-3,Parada 3 ruta R-112,R-112,Z17
+R-112-4,Parada 4 ruta R-112,R-112,Z18
+R-112-5,Parada 5 ruta R-112,R-112,MIXCO
+R-112-6,Parada 6 ruta R-112,R-112,VILLA NUEVA
+R-112-7,Parada 7 ruta R-112,R-112,SAN MIGUEL PETAPA
+R-112-8,Parada 8 ruta R-112,R-112,Z1
+R-113-1,Parada 1 ruta R-113,R-113,Z17
+R-113-2,Parada 2 ruta R-113,R-113,Z18
+R-113-3,Parada 3 ruta R-113,R-113,MIXCO
+R-113-4,Parada 4 ruta R-113,R-113,VILLA NUEVA
+R-113-5,Parada 5 ruta R-113,R-113,SAN MIGUEL PETAPA
+R-113-6,Parada 6 ruta R-113,R-113,Z1
+R-113-7,Parada 7 ruta R-113,R-113,Z4
+R-113-8,Parada 8 ruta R-113,R-113,Z6
+R-114-1,Parada 1 ruta R-114,R-114,MIXCO
+R-114-2,Parada 2 ruta R-114,R-114,VILLA NUEVA
+R-114-3,Parada 3 ruta R-114,R-114,SAN MIGUEL PETAPA
+R-114-4,Parada 4 ruta R-114,R-114,Z1
+R-114-5,Parada 5 ruta R-114,R-114,Z4
+R-114-6,Parada 6 ruta R-114,R-114,Z6
+R-114-7,Parada 7 ruta R-114,R-114,Z7
+R-114-8,Parada 8 ruta R-114,R-114,Z8
+R-115-1,Parada 1 ruta R-115,R-115,SAN MIGUEL PETAPA
+R-115-2,Parada 2 ruta R-115,R-115,Z1
+R-115-3,Parada 3 ruta R-115,R-115,Z4
+R-115-4,Parada 4 ruta R-115,R-115,Z6
+R-115-5,Parada 5 ruta R-115,R-115,Z7
+R-115-6,Parada 6 ruta R-115,R-115,Z8
+R-115-7,Parada 7 ruta R-115,R-115,Z9
+R-115-8,Parada 8 ruta R-115,R-115,Z10
+R-116-1,Parada 1 ruta R-116,R-116,Z4
+R-116-2,Parada 2 ruta R-116,R-116,Z6
+R-116-3,Parada 3 ruta R-116,R-116,Z7
+R-116-4,Parada 4 ruta R-116,R-116,Z8
+R-116-5,Parada 5 ruta R-116,R-116,Z9
+R-116-6,Parada 6 ruta R-116,R-116,Z10
+R-116-7,Parada 7 ruta R-116,R-116,Z11
+R-116-8,Parada 8 ruta R-116,R-116,Z12
+R-117-1,Parada 1 ruta R-117,R-117,Z7
+R-117-2,Parada 2 ruta R-117,R-117,Z8
+R-117-3,Parada 3 ruta R-117,R-117,Z9
+R-117-4,Parada 4 ruta R-117,R-117,Z10
+R-117-5,Parada 5 ruta R-117,R-117,Z11
+R-117-6,Parada 6 ruta R-117,R-117,Z12
+R-117-7,Parada 7 ruta R-117,R-117,Z13
+R-117-8,Parada 8 ruta R-117,R-117,Z17
+R-118-1,Parada 1 ruta R-118,R-118,Z9
+R-118-2,Parada 2 ruta R-118,R-118,Z10
+R-118-3,Parada 3 ruta R-118,R-118,Z11
+R-118-4,Parada 4 ruta R-118,R-118,Z12
+R-118-5,Parada 5 ruta R-118,R-118,Z13
+R-118-6,Parada 6 ruta R-118,R-118,Z17
+R-118-7,Parada 7 ruta R-118,R-118,Z18
+R-118-8,Parada 8 ruta R-118,R-118,MIXCO
+R-119-1,Parada 1 ruta R-119,R-119,Z11
+R-119-2,Parada 2 ruta R-119,R-119,Z12
+R-119-3,Parada 3 ruta R-119,R-119,Z13
+R-119-4,Parada 4 ruta R-119,R-119,Z17
+R-119-5,Parada 5 ruta R-119,R-119,Z18
+R-119-6,Parada 6 ruta R-119,R-119,MIXCO
+R-119-7,Parada 7 ruta R-119,R-119,VILLA NUEVA
+R-119-8,Parada 8 ruta R-119,R-119,SAN MIGUEL PETAPA
+R-120-1,Parada 1 ruta R-120,R-120,Z13
+R-120-2,Parada 2 ruta R-120,R-120,Z17
+R-120-3,Parada 3 ruta R-120,R-120,Z18
+R-120-4,Parada 4 ruta R-120,R-120,MIXCO
+R-120-5,Parada 5 ruta R-120,R-120,VILLA NUEVA
+R-120-6,Parada 6 ruta R-120,R-120,SAN MIGUEL PETAPA
+R-120-7,Parada 7 ruta R-120,R-120,Z1
+R-120-8,Parada 8 ruta R-120,R-120,Z4
+R-121-1,Parada 1 ruta R-121,R-121,Z18
+R-121-2,Parada 2 ruta R-121,R-121,MIXCO
+R-121-3,Parada 3 ruta R-121,R-121,VILLA NUEVA
+R-121-4,Parada 4 ruta R-121,R-121,SAN MIGUEL PETAPA
+R-121-5,Parada 5 ruta R-121,R-121,Z1
+R-121-6,Parada 6 ruta R-121,R-121,Z4
+R-121-7,Parada 7 ruta R-121,R-121,Z6
+R-121-8,Parada 8 ruta R-121,R-121,Z7
+R-122-1,Parada 1 ruta R-122,R-122,VILLA NUEVA
+R-122-2,Parada 2 ruta R-122,R-122,SAN MIGUEL PETAPA
+R-122-3,Parada 3 ruta R-122,R-122,Z1
+R-122-4,Parada 4 ruta R-122,R-122,Z4
+R-122-5,Parada 5 ruta R-122,R-122,Z6
+R-122-6,Parada 6 ruta R-122,R-122,Z7
+R-122-7,Parada 7 ruta R-122,R-122,Z8
+R-122-8,Parada 8 ruta R-122,R-122,Z9
+R-123-1,Parada 1 ruta R-123,R-123,Z1
+R-123-2,Parada 2 ruta R-123,R-123,Z4
+R-123-3,Parada 3 ruta R-123,R-123,Z6
+R-123-4,Parada 4 ruta R-123,R-123,Z7
+R-123-5,Parada 5 ruta R-123,R-123,Z8
+R-123-6,Parada 6 ruta R-123,R-123,Z9
+R-123-7,Parada 7 ruta R-123,R-123,Z10
+R-123-8,Parada 8 ruta R-123,R-123,Z11
+R-124-1,Parada 1 ruta R-124,R-124,Z6
+R-124-2,Parada 2 ruta R-124,R-124,Z7
+R-124-3,Parada 3 ruta R-124,R-124,Z8
+R-124-4,Parada 4 ruta R-124,R-124,Z9
+R-124-5,Parada 5 ruta R-124,R-124,Z10
+R-124-6,Parada 6 ruta R-124,R-124,Z11
+R-124-7,Parada 7 ruta R-124,R-124,Z12
+R-124-8,Parada 8 ruta R-124,R-124,Z13
+R-125-1,Parada 1 ruta R-125,R-125,Z8
+R-125-2,Parada 2 ruta R-125,R-125,Z9
+R-125-3,Parada 3 ruta R-125,R-125,Z10
+R-125-4,Parada 4 ruta R-125,R-125,Z11
+R-125-5,Parada 5 ruta R-125,R-125,Z12
+R-125-6,Parada 6 ruta R-125,R-125,Z13
+R-125-7,Parada 7 ruta R-125,R-125,Z17
+R-125-8,Parada 8 ruta R-125,R-125,Z18
+R-126-1,Parada 1 ruta R-126,R-126,Z10
+R-126-2,Parada 2 ruta R-126,R-126,Z11
+R-126-3,Parada 3 ruta R-126,R-126,Z12
+R-126-4,Parada 4 ruta R-126,R-126,Z13
+R-126-5,Parada 5 ruta R-126,R-126,Z17
+R-126-6,Parada 6 ruta R-126,R-126,Z18
+R-126-7,Parada 7 ruta R-126,R-126,MIXCO
+R-126-8,Parada 8 ruta R-126,R-126,VILLA NUEVA
+R-127-1,Parada 1 ruta R-127,R-127,Z12
+R-127-2,Parada 2 ruta R-127,R-127,Z13
+R-127-3,Parada 3 ruta R-127,R-127,Z17
+R-127-4,Parada 4 ruta R-127,R-127,Z18
+R-127-5,Parada 5 ruta R-127,R-127,MIXCO
+R-127-6,Parada 6 ruta R-127,R-127,VILLA NUEVA
+R-127-7,Parada 7 ruta R-127,R-127,SAN MIGUEL PETAPA
+R-127-8,Parada 8 ruta R-127,R-127,Z1
+R-128-1,Parada 1 ruta R-128,R-128,Z17
+R-128-2,Parada 2 ruta R-128,R-128,Z18
+R-128-3,Parada 3 ruta R-128,R-128,MIXCO
+R-128-4,Parada 4 ruta R-128,R-128,VILLA NUEVA
+R-128-5,Parada 5 ruta R-128,R-128,SAN MIGUEL PETAPA
+R-128-6,Parada 6 ruta R-128,R-128,Z1
+R-128-7,Parada 7 ruta R-128,R-128,Z4
+R-128-8,Parada 8 ruta R-128,R-128,Z6
+R-129-1,Parada 1 ruta R-129,R-129,MIXCO
+R-129-2,Parada 2 ruta R-129,R-129,VILLA NUEVA
+R-129-3,Parada 3 ruta R-129,R-129,SAN MIGUEL PETAPA
+R-129-4,Parada 4 ruta R-129,R-129,Z1
+R-129-5,Parada 5 ruta R-129,R-129,Z4
+R-129-6,Parada 6 ruta R-129,R-129,Z6
+R-129-7,Parada 7 ruta R-129,R-129,Z7
+R-129-8,Parada 8 ruta R-129,R-129,Z8
+R-130-1,Parada 1 ruta R-130,R-130,SAN MIGUEL PETAPA
+R-130-2,Parada 2 ruta R-130,R-130,Z1
+R-130-3,Parada 3 ruta R-130,R-130,Z4
+R-130-4,Parada 4 ruta R-130,R-130,Z6
+R-130-5,Parada 5 ruta R-130,R-130,Z7
+R-130-6,Parada 6 ruta R-130,R-130,Z8
+R-130-7,Parada 7 ruta R-130,R-130,Z9
+R-130-8,Parada 8 ruta R-130,R-130,Z10
+R-131-1,Parada 1 ruta R-131,R-131,Z4
+R-131-2,Parada 2 ruta R-131,R-131,Z6
+R-131-3,Parada 3 ruta R-131,R-131,Z7
+R-131-4,Parada 4 ruta R-131,R-131,Z8
+R-131-5,Parada 5 ruta R-131,R-131,Z9
+R-131-6,Parada 6 ruta R-131,R-131,Z10
+R-131-7,Parada 7 ruta R-131,R-131,Z11
+R-131-8,Parada 8 ruta R-131,R-131,Z12
+R-132-1,Parada 1 ruta R-132,R-132,Z7
+R-132-2,Parada 2 ruta R-132,R-132,Z8
+R-132-3,Parada 3 ruta R-132,R-132,Z9
+R-132-4,Parada 4 ruta R-132,R-132,Z10
+R-132-5,Parada 5 ruta R-132,R-132,Z11
+R-132-6,Parada 6 ruta R-132,R-132,Z12
+R-132-7,Parada 7 ruta R-132,R-132,Z13
+R-132-8,Parada 8 ruta R-132,R-132,Z17
+R-133-1,Parada 1 ruta R-133,R-133,Z9
+R-133-2,Parada 2 ruta R-133,R-133,Z10
+R-133-3,Parada 3 ruta R-133,R-133,Z11
+R-133-4,Parada 4 ruta R-133,R-133,Z12
+R-133-5,Parada 5 ruta R-133,R-133,Z13
+R-133-6,Parada 6 ruta R-133,R-133,Z17
+R-133-7,Parada 7 ruta R-133,R-133,Z18
+R-133-8,Parada 8 ruta R-133,R-133,MIXCO
+R-134-1,Parada 1 ruta R-134,R-134,Z11
+R-134-2,Parada 2 ruta R-134,R-134,Z12
+R-134-3,Parada 3 ruta R-134,R-134,Z13
+R-134-4,Parada 4 ruta R-134,R-134,Z17
+R-134-5,Parada 5 ruta R-134,R-134,Z18
+R-134-6,Parada 6 ruta R-134,R-134,MIXCO
+R-134-7,Parada 7 ruta R-134,R-134,VILLA NUEVA
+R-134-8,Parada 8 ruta R-134,R-134,SAN MIGUEL PETAPA
+R-135-1,Parada 1 ruta R-135,R-135,Z13
+R-135-2,Parada 2 ruta R-135,R-135,Z17
+R-135-3,Parada 3 ruta R-135,R-135,Z18
+R-135-4,Parada 4 ruta R-135,R-135,MIXCO
+R-135-5,Parada 5 ruta R-135,R-135,VILLA NUEVA
+R-135-6,Parada 6 ruta R-135,R-135,SAN MIGUEL PETAPA
+R-135-7,Parada 7 ruta R-135,R-135,Z1
+R-135-8,Parada 8 ruta R-135,R-135,Z4
+R-136-1,Parada 1 ruta R-136,R-136,Z18
+R-136-2,Parada 2 ruta R-136,R-136,MIXCO
+R-136-3,Parada 3 ruta R-136,R-136,VILLA NUEVA
+R-136-4,Parada 4 ruta R-136,R-136,SAN MIGUEL PETAPA
+R-136-5,Parada 5 ruta R-136,R-136,Z1
+R-136-6,Parada 6 ruta R-136,R-136,Z4
+R-136-7,Parada 7 ruta R-136,R-136,Z6
+R-136-8,Parada 8 ruta R-136,R-136,Z7
+R-137-1,Parada 1 ruta R-137,R-137,VILLA NUEVA
+R-137-2,Parada 2 ruta R-137,R-137,SAN MIGUEL PETAPA
+R-137-3,Parada 3 ruta R-137,R-137,Z1
+R-137-4,Parada 4 ruta R-137,R-137,Z4
+R-137-5,Parada 5 ruta R-137,R-137,Z6
+R-137-6,Parada 6 ruta R-137,R-137,Z7
+R-137-7,Parada 7 ruta R-137,R-137,Z8
+R-137-8,Parada 8 ruta R-137,R-137,Z9
+R-138-1,Parada 1 ruta R-138,R-138,Z1
+R-138-2,Parada 2 ruta R-138,R-138,Z4
+R-138-3,Parada 3 ruta R-138,R-138,Z6
+R-138-4,Parada 4 ruta R-138,R-138,Z7
+R-138-5,Parada 5 ruta R-138,R-138,Z8
+R-138-6,Parada 6 ruta R-138,R-138,Z9
+R-138-7,Parada 7 ruta R-138,R-138,Z10
+R-138-8,Parada 8 ruta R-138,R-138,Z11
+R-139-1,Parada 1 ruta R-139,R-139,Z6
+R-139-2,Parada 2 ruta R-139,R-139,Z7
+R-139-3,Parada 3 ruta R-139,R-139,Z8
+R-139-4,Parada 4 ruta R-139,R-139,Z9
+R-139-5,Parada 5 ruta R-139,R-139,Z10
+R-139-6,Parada 6 ruta R-139,R-139,Z11
+R-139-7,Parada 7 ruta R-139,R-139,Z12
+R-139-8,Parada 8 ruta R-139,R-139,Z13
+R-140-1,Parada 1 ruta R-140,R-140,Z8
+R-140-2,Parada 2 ruta R-140,R-140,Z9
+R-140-3,Parada 3 ruta R-140,R-140,Z10
+R-140-4,Parada 4 ruta R-140,R-140,Z11
+R-140-5,Parada 5 ruta R-140,R-140,Z12
+R-140-6,Parada 6 ruta R-140,R-140,Z13
+R-140-7,Parada 7 ruta R-140,R-140,Z17
+R-140-8,Parada 8 ruta R-140,R-140,Z18
+R-141-1,Parada 1 ruta R-141,R-141,Z10
+R-141-2,Parada 2 ruta R-141,R-141,Z11
+R-141-3,Parada 3 ruta R-141,R-141,Z12
+R-141-4,Parada 4 ruta R-141,R-141,Z13
+R-141-5,Parada 5 ruta R-141,R-141,Z17
+R-141-6,Parada 6 ruta R-141,R-141,Z18
+R-141-7,Parada 7 ruta R-141,R-141,MIXCO
+R-141-8,Parada 8 ruta R-141,R-141,VILLA NUEVA
