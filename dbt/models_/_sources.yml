@@ -1,0 +1,14 @@
+version: 2
+sources:
+  - name: bronze
+    schema: bronze
+    tables:
+      - name: transmetro_validaciones
+      - name: aerometro_boardings
+      - name: transurbano_transacciones
+      - name: metroriel_viajes
+      - name: cdc_padron_usuarios
+      - name: tm_estaciones
+      - name: tu_paradas
+      - name: mr_estaciones
+      - name: am_estaciones

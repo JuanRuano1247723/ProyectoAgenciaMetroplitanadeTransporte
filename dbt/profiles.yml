@@ -1,0 +1,8 @@
+ci:
+  target: ci
+  outputs:
+    ci:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', '../.ci/warehouse.duckdb') }}"
+      schema: bronze
+      threads: 4
