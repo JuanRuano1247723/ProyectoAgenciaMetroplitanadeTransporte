@@ -12,32 +12,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ------------------------------------------------------------------
-  # Job 1: Python + Bronze tests (no Kafka, no real warehouse needed)
-  # ------------------------------------------------------------------
   bronze-tests:
     name: Bronze unit tests (pytest)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
-
+      
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-
+      
       - name: Run pytest
         run: pytest -q
 
-  # ------------------------------------------------------------------
-  # Job 2: dbt test against a DuckDB warehouse built from the Bronze layer
-  # ------------------------------------------------------------------
   dbt-test:
     name: dbt test
     runs-on: ubuntu-latest
@@ -45,45 +39,41 @@ jobs:
     env:
       DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
-
+      
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-
+      
       - name: Build Bronze layer from synthetic data
-        # Generates tests/datos_sinteticos into a temp lake dir, runs the Bronze
-        # pipeline (batch + CDC + streaming via in-memory fake broker), then
-        # materializes the DuckDB views that dbt will read from.
-        run: |
-          python -m tests.build_ci_warehouse --out .ci/warehouse.duckdb
-
+        run: python -m tests.build_ci_warehouse --out .ci/warehouse.duckdb
+      
       - name: dbt deps
         working-directory: dbt
         run: dbt deps
-
+      
       - name: dbt debug
         working-directory: dbt
         run: dbt debug
-
+      
       - name: dbt run (build models)
         working-directory: dbt
         run: dbt run --target ci
-
+      
       - name: dbt test
         working-directory: dbt
         run: dbt test --target ci
-
+      
       - name: Upload dbt logs on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dbt-logs
           path: dbt/logs/
