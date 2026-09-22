@@ -1,0 +1,10 @@
+fuente,via,archivo,filas_origen,filas_bronze,filas_malformadas,diferencia,particiones,estado
+tm_estaciones,batch,tm_estaciones.csv,104,104,0,0,1,OK
+tu_paradas,batch,tu_paradas.csv,328,328,0,0,1,OK
+mr_estaciones,batch,mr_estaciones.csv,22,22,0,0,1,OK
+am_estaciones,batch,am_estaciones.csv,14,14,0,0,1,OK
+transmetro_validaciones,streaming,transmetro_validaciones.csv,363221,363221,0,0,45,OK
+aerometro_boardings,streaming,aerometro_boardings.csv,203554,203554,0,0,46,OK
+transurbano_transacciones,batch,transurbano_transacciones.csv,832791,832791,0,0,90,OK
+metroriel_viajes,batch,metroriel_viajes.jsonl,299100,299100,0,0,45,OK
+cdc_padron_usuarios,cdc,cdc_padron_usuarios.csv,31050,31050,0,0,1,OK

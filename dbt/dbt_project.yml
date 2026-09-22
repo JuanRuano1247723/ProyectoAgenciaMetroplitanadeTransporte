@@ -1,0 +1,12 @@
+name: medallion
+version: "1.0.0"
+profile: ci
+model-paths: ["models"]
+test-paths: ["tests"]
+target-path: target
+models:
+  medallion:
+    silver:
+      +materialized: table
+    gold:
+      +materialized: table
