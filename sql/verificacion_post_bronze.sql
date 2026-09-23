@@ -1,6 +1,6 @@
 -- Verificación de Bronze con los datos reales.
 --   python -m bronze.cli vistas
---   duckdb lake/bronze_vistas.duckdb < sql/verificacion_post_bronze.sql
+--   python -m flows.consultas sql/verificacion_post_bronze.sql      (o, con la CLI de duckdb:  duckdb lake/bronze_vistas.duckdb < sql/verificacion_post_bronze.sql)
 -- Todas son consultas de solo lectura sobre las vistas bronze.*; no modifican nada.
 
 .print '== 1. Filas por tabla Bronze y por tabla de malformadas'

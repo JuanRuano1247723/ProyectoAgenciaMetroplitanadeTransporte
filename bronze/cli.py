@@ -5,6 +5,7 @@
   python -m bronze.cli cdc
   python -m bronze.cli produce transmetro_validaciones --tamano-rafaga 500 --pausa 2
   python -m bronze.cli consume transmetro_validaciones --modo drain
+  python -m bronze.cli reiniciar-consumidor ambos --confirmar     (repara duplicados de transporte)
   python -m bronze.cli conciliar --csv salidas/conteos_bronze.csv
   python -m bronze.cli vistas
 """
@@ -42,6 +43,10 @@ def main(argv=None) -> int:
     p = sub.add_parser("consume", help="consume un topic hacia Bronze")
     p.add_argument("fuente", choices=[f.clave for f in STREAMING] + ["ambos"])
     p.add_argument("--modo", choices=["drain", "continuo"], default="drain")
+    p = sub.add_parser("reiniciar-consumidor", help="borra la tabla Bronze de streaming y su estado; se reconstruye con consume")
+    p.add_argument("fuente", choices=[f.clave for f in STREAMING] + ["ambos"])
+    p.add_argument("--confirmar", action="store_true", help="sin esta bandera solo muestra qué se borraría")
+    p.add_argument("--incluir-productor", action="store_true", help="también olvida lo publicado (si los topics se recrearon)")
     p = sub.add_parser("conciliar", help="tabla de conteos por archivo")
     p.add_argument("--csv", type=Path)
     sub.add_parser("vistas", help="crea lake/bronze_vistas.duckdb")
@@ -69,6 +74,13 @@ def main(argv=None) -> int:
         from .streaming import ConsumidorBronze
         for c in _claves_stream(a.fuente):
             ConsumidorBronze(cfg, FUENTES[c]).ejecutar(modo=a.modo, run_id=run_id)
+    elif a.cmd == "reiniciar-consumidor":
+        from .streaming import reiniciar_consumidor
+        for cl in _claves_stream(a.fuente):
+            r = reiniciar_consumidor(cfg, FUENTES[cl], confirmar=a.confirmar, incluir_productor=a.incluir_productor)
+            print(r)
+        if not a.confirmar:
+            print("(simulación: agrega --confirmar para borrar; luego corre `consume`)")
     elif a.cmd == "conciliar":
         filas = conciliar(cfg)
         print(a_markdown(filas))

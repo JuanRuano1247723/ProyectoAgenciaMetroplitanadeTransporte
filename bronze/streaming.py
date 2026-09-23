@@ -11,6 +11,11 @@ Diseño de garantías
   reiniciar se revierten los archivos sin marcador y el micro-lote se repite: exactly-once hacia
   Bronze sin duplicados. El commit de offsets en Kafka es solo informativo.
 * Micro-lote: N filas o T segundos, lo que ocurra primero (la cola final no queda sin escribir).
+* Repetidos de transporte: cada mensaje lleva `file_hash` y `line` (línea del archivo original). Si el
+  topic contiene el mismo mensaje más de una vez (el productor reintentó, o se republicó el archivo desde
+  un lake nuevo mientras Kafka conservaba la corrida anterior), el consumidor escribe solo la primera copia
+  y cuenta las demás. La llave técnica (`_file_hash`, `_source_line_number`) queda única en Bronze.
+  Esto NO toca los duplicados que ya vienen dentro del archivo: esos tienen líneas distintas y se conservan.
 
 Los clientes de Kafka se inyectan (`cliente=`), lo que permite probar la lógica sin un broker.
 """
@@ -25,6 +30,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
 
+import duckdb
 import pyarrow as pa
 from confluent_kafka import TIMESTAMP_NOT_AVAILABLE, TopicPartition
 
@@ -220,6 +226,18 @@ class ConsumidorBronze:
         self.mal_dir = cfg.malformed_dir / fuente.operador / fuente.entidad
         self.particiones = list(range(cfg.kafka_particiones))
 
+    def _llaves_existentes(self) -> set:
+        """(file_hash, línea) ya presentes en Bronze o en malformadas (tras revertir lo no confirmado)."""
+        vistas: set = set()
+        con = duckdb.connect()
+        for base in (self.tabla_dir, self.mal_dir):
+            if base.exists() and any(base.glob("**/*.parquet")):
+                vistas.update(con.execute(
+                    "SELECT _file_hash, _source_line_number FROM read_parquet(?, union_by_name=true) "
+                    "WHERE _file_hash IS NOT NULL", [str(base / "**" / "*.parquet")]).fetchall())
+        con.close()
+        return vistas
+
     # ---- procesamiento de un mensaje ------------------------------------------------
     def _meta(self, msg, headers: dict, run_id: str, ingestado) -> dict:
         tipo_ts, ts = msg.timestamp()
@@ -271,7 +289,7 @@ class ConsumidorBronze:
                     cols = buffers.setdefault(fecha, {n: [] for n in self.esquema.names})
                     for n in self.esquema.names:
                         cols[n].append(i["fila"][n])
-                else:
+                elif i["malo"] is not None:
                     malos.append(i["malo"])
             stats["archivos"] += escribir_buffers(self.cfg, self.tabla_dir, self.esquema, buffers, nombre)
             if malos:
@@ -298,7 +316,7 @@ class ConsumidorBronze:
         t0, iniciado = time.monotonic(), utcnow()
         fecha_ingesta = iniciado.date().isoformat()
         stats = {"consumidos": 0, "escritas": 0, "malformadas": 0, "archivos": 0, "por_defecto": 0,
-                 "fechas": set()}
+                 "fechas": set(), "repetidos": 0}
 
         inicio = {}
         for p in self.particiones:
@@ -307,6 +325,7 @@ class ConsumidorBronze:
             if rev:
                 log.warning("%s p%d: se revirtieron %d archivos de un micro-lote sin confirmar", topic, p, rev)
             inicio[p] = ultimo + 1
+        vistos = self._llaves_existentes()
         self.cliente.assign([TopicPartition(topic, p, inicio[p]) for p in self.particiones])
 
         marca_alta = {p: self.cliente.get_watermark_offsets(TopicPartition(topic, p), timeout=10,
@@ -336,7 +355,17 @@ class ConsumidorBronze:
                 p, off = msg.partition(), msg.offset()
                 if off < inicio[p]:
                     continue
-                fila, malo, info = self._procesar(msg, run_id, iniciado, fecha_ingesta)
+                enc = dict(msg.headers() or [])
+                llave_tecnica = ((enc["file_hash"].decode(), int(enc["line"]))
+                                 if "file_hash" in enc and "line" in enc else None)
+                if llave_tecnica is not None and llave_tecnica in vistos:
+                    # mensaje repetido: se avanza el offset (queda cubierto por el marcador) sin escribirlo
+                    stats["repetidos"] += 1
+                    fila = malo = info = None
+                else:
+                    fila, malo, info = self._procesar(msg, run_id, iniciado, fecha_ingesta)
+                    if llave_tecnica is not None:
+                        vistos.add(llave_tecnica)
                 buffer.append({"particion": p, "offset": off, "fila": fila, "malo": malo,
                                "fecha": info[0] if info else None, "defecto": bool(info and info[1])})
                 stats["consumidos"] += 1
@@ -356,14 +385,41 @@ class ConsumidorBronze:
                              filas_leidas_origen=stats["consumidos"], filas_escritas_bronze=stats["escritas"],
                              filas_malformadas=stats["malformadas"], filas_particion_por_defecto=stats["por_defecto"],
                              particiones=len(stats["fechas"]), archivos_parquet=stats["archivos"],
-                             estado="OK", observaciones=f"modo={modo} inicio_offsets={inicio}",
+                             estado="OK",
+                             observaciones=f"modo={modo} inicio_offsets={inicio} repetidos_de_transporte={stats['repetidos']}",
                              iniciado_en=iniciado, terminado_en=utcnow(),
                              duracion_s=round(time.monotonic() - t0, 3))
         registrar_log(cfg, reg)
         log.info("%s: %d mensajes -> %d filas Bronze + %d malformadas", topic, stats["consumidos"],
                  stats["escritas"], stats["malformadas"])
+        if stats["repetidos"]:
+            log.warning("%s: se descartaron %d mensajes repetidos (mismo archivo y línea). Suele pasar cuando Kafka "
+                        "conserva mensajes de una corrida anterior y el archivo se republica desde un lake nuevo.",
+                        topic, stats["repetidos"])
         try:
             self.cliente.close()
         except Exception:
             pass
         return reg
+
+
+# ====================================================================== reparación
+def reiniciar_consumidor(cfg: Config, fuente: Fuente, confirmar: bool = False, incluir_productor: bool = False) -> dict:
+    """Borra la tabla Bronze de una fuente de streaming y todo el estado de su consumidor, para reconstruirla
+    desde Kafka con un nuevo `consume`. Kafka conserva los mensajes, así que no se pierde nada mientras estén
+    dentro de su retención. Se conservan: landing y el log del productor (salvo `incluir_productor`).
+
+    Es una reparación explícita: Bronze es normalmente solo-append. Sin `confirmar` solo informa qué borraría."""
+    import shutil
+    objetivos = [cfg.bronze_dir / fuente.operador / fuente.entidad,
+                 cfg.malformed_dir / fuente.operador / fuente.entidad,
+                 cfg.commits_dir / fuente.topic]
+    objetivos += list(cfg.log_dir.glob(f"stream_consume__{fuente.clave}__*.parquet")) if cfg.log_dir.exists() else []
+    if incluir_productor:
+        objetivos += list(cfg.log_dir.glob(f"stream_produce__{fuente.clave}__*.parquet")) if cfg.log_dir.exists() else []
+        objetivos += list(cfg.checkpoints_dir.glob(f"{fuente.clave}__*.json")) if cfg.checkpoints_dir.exists() else []
+    existentes = [p for p in objetivos if p.exists()]
+    if confirmar:
+        for p in existentes:
+            shutil.rmtree(p) if p.is_dir() else p.unlink()
+    return {"fuente": fuente.clave, "eliminado" if confirmar else "eliminaria": [str(p) for p in existentes]}

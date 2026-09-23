@@ -29,6 +29,16 @@ def _contar(con, d: Path, file_hash: str) -> int:
                        [str(d / "**" / "*.parquet"), file_hash]).fetchone()[0]
 
 
+def _repetidas(con, d: Path, file_hash: str) -> int:
+    """Filas que comparten (_file_hash, _source_line_number) con otra: la misma línea de origen más de una vez."""
+    if not _hay_parquet(d):
+        return 0
+    return con.execute(
+        "SELECT count(*) - count(DISTINCT (_file_hash, _source_line_number)) "
+        "FROM read_parquet(?, union_by_name=true) WHERE _file_hash = ?",
+        [str(d / "**" / "*.parquet"), file_hash]).fetchone()[0]
+
+
 def conciliar(cfg: Config, claves: Optional[list[str]] = None) -> list[dict]:
     con = duckdb.connect()
     filas = []
@@ -45,7 +55,10 @@ def conciliar(cfg: Config, claves: Optional[list[str]] = None) -> list[dict]:
         bronze = _contar(con, tabla_dir, h)
         malf = _contar(con, cfg.malformed_dir / f.operador / f.entidad, h)
         dif = origen - bronze - malf
-        if dif == 0:
+        rep_ = _repetidas(con, tabla_dir, h)
+        if rep_ > 0:
+            estado = "DUPLICADOS_TECNICOS"     # la misma línea de origen está más de una vez en Bronze
+        elif dif == 0:
             estado = "OK"
         elif bronze == 0 and malf == 0:
             estado = "NO_INGERIDO"
@@ -54,7 +67,7 @@ def conciliar(cfg: Config, claves: Optional[list[str]] = None) -> list[dict]:
         filas.append({
             "fuente": f.clave, "via": f.via, "archivo": f.archivo,
             "filas_origen": origen, "filas_bronze": bronze, "filas_malformadas": malf,
-            "diferencia": dif,
+            "diferencia": dif, "duplicadas_tecnicas": rep_,
             "particiones": len(list(tabla_dir.glob("_partition_date=*"))) if tabla_dir.exists() else 0,
             "estado": estado,
         })
@@ -63,7 +76,7 @@ def conciliar(cfg: Config, claves: Optional[list[str]] = None) -> list[dict]:
 
 def a_markdown(filas: list[dict]) -> str:
     cols = ["fuente", "via", "archivo", "filas_origen", "filas_bronze", "filas_malformadas",
-            "diferencia", "particiones", "estado"]
+            "diferencia", "duplicadas_tecnicas", "particiones", "estado"]
     enc = "| " + " | ".join(cols) + " |\n|" + "|".join("---" for _ in cols) + "|\n"
     cuerpo = ""
     for r in filas:
@@ -75,7 +88,7 @@ def a_markdown(filas: list[dict]) -> str:
 def exportar_csv(filas: list[dict], destino: Path) -> None:
     destino.parent.mkdir(parents=True, exist_ok=True)
     cols = ["fuente", "via", "archivo", "filas_origen", "filas_bronze", "filas_malformadas",
-            "diferencia", "particiones", "estado"]
+            "diferencia", "duplicadas_tecnicas", "particiones", "estado"]
     with open(destino, "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=cols, extrasaction="ignore")
         w.writeheader()

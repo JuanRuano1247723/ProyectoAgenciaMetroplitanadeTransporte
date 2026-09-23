@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  - name: silver_tm_validaciones
+    columns:
+      - {name: evento_sk, tests: [unique, not_null]}
+      - {name: tarjeta, tests: [not_null]}
+      - {name: ts_local, tests: [not_null]}
+  - name: silver_tu_transacciones
+    columns:
+      - {name: evento_sk, tests: [unique, not_null]}
+      - {name: cod_parada, tests: [not_null]}
+      - {name: ts_local, tests: [not_null]}
+  - name: silver_am_boardings
+    columns:
+      - {name: evento_sk, tests: [unique, not_null]}
+      - {name: ts_local, tests: [not_null]}
+  - name: silver_mr_viajes
+    columns:
+      - {name: evento_sk, tests: [unique, not_null]}
+      - {name: ts_salida, tests: [not_null]}
+  - name: silver_estacion
+    columns:
+      - {name: estacion_sk, tests: [unique, not_null]}
+      - name: zona_id
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_zona'), field: zona_id}
+  - name: silver_padron_scd2
+    columns:
+      - {name: padron_sk, tests: [unique, not_null]}
+      - name: zona_residencia_id
+        tests:
+          - relationships:
+              arguments: {to: ref('dim_zona'), field: zona_id}
+  - name: silver_usuario
+    columns:
+      - {name: usuario_sk, tests: [unique, not_null]}
+      - {name: persona_id, tests: [not_null]}
+  - name: silver_cuarentena
+    columns:
+      - {name: cuarentena_sk, tests: [unique, not_null]}
+      - {name: regla_principal, tests: [not_null]}
+      - {name: motivo, tests: [not_null]}
+
+seeds:
+  - name: dim_zona
+    columns:
+      - {name: zona_id, tests: [unique, not_null]}
+      - {name: clave_normalizada, tests: [unique, not_null]}

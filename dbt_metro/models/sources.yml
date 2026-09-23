@@ -1,0 +1,126 @@
+version: 2
+
+# Bronze se declara como fuente. Solo Silver/staging lee Bronze; Gold nunca.
+sources:
+  - name: bronze
+    database: bronze_db
+    schema: bronze
+    description: Tablas Bronze del lake (Parquet), expuestas como vistas de solo lectura.
+    tables:
+      - name: transmetro_validaciones
+        tests: [llave_tecnica_unica]
+        columns:
+          - name: _ingested_at
+            tests: [not_null]
+          - name: _file_hash
+            tests: [not_null]
+          - name: _source_line_number
+            tests: [not_null]
+          - name: _batch_id
+            tests: [not_null]
+          - name: _source_file
+            tests: [not_null]
+      - name: aerometro_boardings
+        tests: [llave_tecnica_unica]
+        columns:
+          - name: _ingested_at
+            tests: [not_null]
+          - name: _file_hash
+            tests: [not_null]
+          - name: _source_line_number
+            tests: [not_null]
+          - name: _batch_id
+            tests: [not_null]
+          - name: _source_file
+            tests: [not_null]
+      - name: transurbano_transacciones
+        tests: [llave_tecnica_unica]
+        columns:
+          - name: _ingested_at
+            tests: [not_null]
+          - name: _file_hash
+            tests: [not_null]
+          - name: _source_line_number
+            tests: [not_null]
+          - name: _batch_id
+            tests: [not_null]
+          - name: _source_file
+            tests: [not_null]
+      - name: metroriel_viajes
+        tests: [llave_tecnica_unica]
+        columns:
+          - name: _ingested_at
+            tests: [not_null]
+          - name: _file_hash
+            tests: [not_null]
+          - name: _source_line_number
+            tests: [not_null]
+          - name: _batch_id
+            tests: [not_null]
+          - name: _source_file
+            tests: [not_null]
+      - name: transmetro_padron_cdc
+        tests: [llave_tecnica_unica]
+        columns:
+          - name: _ingested_at
+            tests: [not_null]
+          - name: _file_hash
+            tests: [not_null]
+          - name: _source_line_number
+            tests: [not_null]
+          - name: _batch_id
+            tests: [not_null]
+          - name: _source_file
+            tests: [not_null]
+      - name: transmetro_estaciones
+        tests: [llave_tecnica_unica]
+        columns:
+          - name: _ingested_at
+            tests: [not_null]
+          - name: _file_hash
+            tests: [not_null]
+          - name: _source_line_number
+            tests: [not_null]
+          - name: _batch_id
+            tests: [not_null]
+          - name: _source_file
+            tests: [not_null]
+      - name: transurbano_paradas
+        tests: [llave_tecnica_unica]
+        columns:
+          - name: _ingested_at
+            tests: [not_null]
+          - name: _file_hash
+            tests: [not_null]
+          - name: _source_line_number
+            tests: [not_null]
+          - name: _batch_id
+            tests: [not_null]
+          - name: _source_file
+            tests: [not_null]
+      - name: metroriel_estaciones
+        tests: [llave_tecnica_unica]
+        columns:
+          - name: _ingested_at
+            tests: [not_null]
+          - name: _file_hash
+            tests: [not_null]
+          - name: _source_line_number
+            tests: [not_null]
+          - name: _batch_id
+            tests: [not_null]
+          - name: _source_file
+            tests: [not_null]
+      - name: aerometro_estaciones
+        tests: [llave_tecnica_unica]
+        columns:
+          - name: _ingested_at
+            tests: [not_null]
+          - name: _file_hash
+            tests: [not_null]
+          - name: _source_line_number
+            tests: [not_null]
+          - name: _batch_id
+            tests: [not_null]
+          - name: _source_file
+            tests: [not_null]

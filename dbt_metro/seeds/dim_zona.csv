@@ -1,0 +1,40 @@
+zona_id,clave_normalizada,zona_nombre,tipo,municipio
+-1,sin mapear,Sin mapear,desconocido,
+1,zona 1,Zona 1,zona_capital,Guatemala
+2,zona 2,Zona 2,zona_capital,Guatemala
+3,zona 3,Zona 3,zona_capital,Guatemala
+4,zona 4,Zona 4,zona_capital,Guatemala
+5,zona 5,Zona 5,zona_capital,Guatemala
+6,zona 6,Zona 6,zona_capital,Guatemala
+7,zona 7,Zona 7,zona_capital,Guatemala
+8,zona 8,Zona 8,zona_capital,Guatemala
+9,zona 9,Zona 9,zona_capital,Guatemala
+10,zona 10,Zona 10,zona_capital,Guatemala
+11,zona 11,Zona 11,zona_capital,Guatemala
+12,zona 12,Zona 12,zona_capital,Guatemala
+13,zona 13,Zona 13,zona_capital,Guatemala
+14,zona 14,Zona 14,zona_capital,Guatemala
+15,zona 15,Zona 15,zona_capital,Guatemala
+16,zona 16,Zona 16,zona_capital,Guatemala
+17,zona 17,Zona 17,zona_capital,Guatemala
+18,zona 18,Zona 18,zona_capital,Guatemala
+19,zona 19,Zona 19,zona_capital,Guatemala
+20,zona 20,Zona 20,zona_capital,Guatemala
+21,zona 21,Zona 21,zona_capital,Guatemala
+22,zona 22,Zona 22,zona_capital,Guatemala
+23,zona 23,Zona 23,zona_capital,Guatemala
+24,zona 24,Zona 24,zona_capital,Guatemala
+25,zona 25,Zona 25,zona_capital,Guatemala
+101,mixco,Mixco,municipio,Mixco
+102,villa nueva,Villa Nueva,municipio,Villa Nueva
+103,san miguel petapa,San Miguel Petapa,municipio,San Miguel Petapa
+104,santa catarina pinula,Santa Catarina Pinula,municipio,Santa Catarina Pinula
+105,san jose pinula,San Jose Pinula,municipio,San Jose Pinula
+106,villa canales,Villa Canales,municipio,Villa Canales
+107,chinautla,Chinautla,municipio,Chinautla
+108,san pedro ayampuc,San Pedro Ayampuc,municipio,San Pedro Ayampuc
+109,fraijanes,Fraijanes,municipio,Fraijanes
+110,amatitlan,Amatitlan,municipio,Amatitlan
+111,san juan sacatepequez,San Juan Sacatepequez,municipio,San Juan Sacatepequez
+112,palencia,Palencia,municipio,Palencia
+113,san jose del golfo,San Jose del Golfo,municipio,San Jose del Golfo

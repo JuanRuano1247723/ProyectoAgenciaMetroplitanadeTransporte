@@ -1,0 +1,15 @@
+# Warehouse DuckDB (staging, silver, gold). Bronze se lee en modo lectura desde las vistas
+# que crea `python -m bronze.cli vistas` (lake/bronze_vistas.duckdb).
+# Requiere la variable LAKE_DIR (ruta absoluta al lake); el ejecutor de Python la define.
+metro:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('LAKE_DIR') }}/warehouse.duckdb"
+      schema: main
+      threads: 4
+      attach:
+        - path: "{{ env_var('LAKE_DIR') }}/bronze_vistas.duckdb"
+          alias: bronze_db
+          read_only: true

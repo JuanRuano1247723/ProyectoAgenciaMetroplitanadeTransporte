@@ -1,0 +1,35 @@
+fuente,regla,severidad,descripcion
+transmetro_validaciones,llave_formato_invalido,rechazo,La tarjeta no cumple el formato TC-######## (8 dígitos)
+transmetro_validaciones,fecha_invalida,rechazo,fecha_hora no se puede interpretar como YYYY-MM-DD HH:MM:SS
+transmetro_validaciones,fecha_futura,rechazo,La fecha del evento es posterior a la fecha de ingesta
+transmetro_validaciones,monto_invalido,rechazo,La tarifa no es numérica o es negativa
+transmetro_validaciones,duplicado_torniquete,rechazo,validacion_id repetido: se conserva la primera lectura (menor línea de origen)
+transmetro_validaciones,posible_doble_lectura,advertencia,Misma tarjeta y estación con distinto id dentro de la ventana de doble lectura
+transmetro_validaciones,estacion_sin_catalogo,advertencia,estacion_id no existe en el catálogo de estaciones
+transmetro_validaciones,tarjeta_sin_padron,advertencia,La tarjeta no tiene ninguna operación válida en el CDC del padrón
+transurbano_transacciones,llave_formato_invalido,rechazo,num_tarjeta no cumple el formato de 10 dígitos
+transurbano_transacciones,fecha_invalida,rechazo,fecha/hora no se pueden interpretar como DD/MM/YYYY HH:MM:SS
+transurbano_transacciones,fecha_futura,rechazo,La fecha del evento es posterior a la fecha de ingesta
+transurbano_transacciones,monto_invalido,rechazo,monto_centavos no es numérico o es negativo
+transurbano_transacciones,cod_parada_nulo,rechazo,La transacción no trae código de parada
+transurbano_transacciones,duplicado_exacto,rechazo,Fila idéntica en todas las columnas: se conserva la primera
+transurbano_transacciones,parada_sin_catalogo,advertencia,cod_parada no existe en el catálogo de paradas
+aerometro_boardings,llave_formato_invalido,rechazo,user_hash no cumple el formato de 12 caracteres hexadecimales
+aerometro_boardings,fecha_invalida,rechazo,timestamp_utc no se puede interpretar como ISO 8601 UTC
+aerometro_boardings,fecha_futura,rechazo,La fecha del evento es posterior a la fecha de ingesta
+aerometro_boardings,monto_invalido,rechazo,fare no es numérico o es negativo
+aerometro_boardings,duplicado_boarding,rechazo,boarding_id repetido: se conserva el primero
+aerometro_boardings,estacion_sin_catalogo,advertencia,station_code no existe en el catálogo de estaciones
+metroriel_viajes,llave_formato_invalido,rechazo,card no cumple el formato MR#######
+metroriel_viajes,fecha_invalida,rechazo,entry.ts no se puede interpretar como ISO 8601
+metroriel_viajes,fecha_futura,rechazo,La fecha de entrada es posterior a la fecha de ingesta
+metroriel_viajes,monto_invalido,rechazo,fare_gtq no es numérico o es negativo
+metroriel_viajes,viaje_sin_salida,rechazo,El viaje no tiene salida (exit nulo): no se puede calcular el trayecto
+metroriel_viajes,salida_antes_de_entrada,rechazo,exit.ts es anterior a entry.ts
+metroriel_viajes,duplicado_viaje,rechazo,trip_id repetido: se conserva el primero
+metroriel_viajes,duracion_no_coincide,advertencia,duration_s difiere de (salida - entrada) en más de 1 segundo
+metroriel_viajes,estacion_sin_catalogo,advertencia,La estación de entrada o de salida no existe en el catálogo
+cdc_padron_usuarios,llave_centinela,rechazo,tarjeta = SIN-TARJETA: no identifica a nadie
+cdc_padron_usuarios,llave_formato_no_transmetro,rechazo,tarjeta no cumple el formato TC-######## (p. ej. llaves con formato MR)
+cdc_padron_usuarios,operacion_desconocida,rechazo,"op no es INSERT, UPDATE ni DELETE"
+cdc_padron_usuarios,secuencia_invalida,rechazo,seq no es numérica

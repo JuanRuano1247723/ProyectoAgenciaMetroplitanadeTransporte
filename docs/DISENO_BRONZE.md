@@ -93,7 +93,7 @@ y fusionaría en silencio los 1,115 duplicados de Transmetro. El objetivo, que n
 | Vía | Unicidad garantizada por | Cómo |
 |---|---|---|
 | Batch / CDC | `_file_hash` + `_source_line_number` | el hash del archivo ya registrado como OK se omite; los archivos Parquet tienen nombre determinista (`part-<hash16>-<n>`), así que un reintento sobrescribe el mismo archivo |
-| Streaming | `_kafka_topic` + `_kafka_partition` + `_kafka_offset` | el consumidor retoma en (último offset confirmado + 1); cada micro-lote se escribe **antes** de su marcador de confirmación |
+| Streaming | `_kafka_topic` + `_kafka_partition` + `_kafka_offset`, y además `_file_hash` + `_source_line_number` | el consumidor retoma en (último offset confirmado + 1); cada micro-lote se escribe **antes** de su marcador de confirmación. Como un offset identifica un *mensaje* y no una *línea de origen*, el consumidor además descarta los mensajes cuya (`_file_hash`, línea) ya está en Bronze (ver D10) |
 
 Los duplicados que ya vienen en el origen se conservan y se resuelven en Silver.
 El `upsert` por llave de negocio (padrón vigente, deduplicación de eventos) va en Silver.
@@ -129,7 +129,9 @@ lo decisivo es la **ausencia de requisito de latencia**.
 - **Micro-lotes.** N filas **o** T segundos, lo que ocurra primero (`MICROLOTE_FILAS`, `MICROLOTE_SEGUNDOS`). La cola final siempre se escribe.
 - **Recuperación.** Si el proceso muere entre escribir el Parquet y su marcador, al reiniciar se revierten los archivos sin marcador (nunca confirmados) y se repite el micro-lote.
   El commit de offsets en Kafka es informativo.
-- **Garantía.** Consumidor: *exactly-once* hacia Bronze. Productor: *at-least-once*; si se cae a media ráfaga puede repetir como máximo una ráfaga (limitación conocida; los repetidos son detectables por `_file_hash` + `_source_line_number`).
+- **Garantía.** Consumidor: *exactly-once* hacia Bronze, tanto ante caídas (marcadores) como ante mensajes repetidos en el topic. Productor: *at-least-once*; si se cae a media ráfaga puede repetir como máximo una ráfaga.
+- **Mensajes repetidos en el topic.** Cada mensaje lleva `file_hash` y `line` como *headers*. El consumidor carga al iniciar las (`file_hash`, línea) ya presentes en Bronze y escribe solo la primera copia de cada una; las demás se cuentan (`repetidos_de_transporte` en la bitácora, más un aviso en el log) y su offset queda cubierto por el marcador. Esto cubre el caso real de **cambiar de carpeta** (lake vacío) **manteniendo Kafka**: el productor no encuentra registro en el lake nuevo y republica el archivo, pero los mensajes de la corrida anterior siguen en el topic. Los duplicados que ya vienen dentro del archivo (líneas distintas) no se tocan.
+- **Reparación** de un Bronze que ya quedó con la misma línea dos veces (por ejemplo, cargado con una versión anterior del consumidor): `python -m bronze.cli reiniciar-consumidor ambos --confirmar` y luego `consume ambos`. Sin `--confirmar` solo muestra qué borraría. Se conservan landing y el log del productor; Kafka conserva los mensajes (dentro de su retención), así que la tabla se reconstruye completa.
 - **Archivos pequeños.** Cada micro-lote genera un archivo por (partición Kafka × fecha). A este volumen es aceptable; una tarea de compactación futura no alteraría los datos.
 
 ### D11 · CDC
@@ -141,7 +143,7 @@ El archivo `cdc_padron_usuarios.csv` se guarda completo: una fila por operación
 
 Cada evento (archivo cargado, omitido, fallido, ráfaga publicada, micro-lote consumido) deja una fila en `_control/ingest_log`. La conciliación **no repite** el conteo de la carga:
 cuenta las líneas físicas del archivo de origen y las filas de Bronze y malformadas leyendo los Parquet, filtradas por el hash del archivo actual. `origen = Bronze + malformadas` o el estado es
-`DESCUADRE` (o `NO_INGERIDO`).
+`DESCUADRE` (o `NO_INGERIDO`). La columna `duplicadas_tecnicas` cuenta filas que comparten (`_file_hash`, `_source_line_number`) con otra; si es mayor que 0 el estado es `DUPLICADOS_TECNICOS`, porque la misma línea de origen está más de una vez en Bronze.
 
 ### D13 · Orquestación
 
@@ -209,7 +211,7 @@ aplicación de operaciones CDC, cuarentena con motivo de negocio y catálogos de
 
 ```bash
 pip install -r requirements.txt
-pytest                                   # 34 pruebas, sin Kafka
+pytest                                   # sin Kafka
 python -m bronze.cli batch && python -m bronze.cli cdc
 docker compose up -d && python -m bronze.cli topics
 python -m bronze.cli produce ambos --pausa 0     # o con la pausa de 2 s por ráfaga
@@ -224,6 +226,6 @@ python -m flows.bronze_flow              # todo con Prefect
 
 - **Kafka real sin probar.** La lógica de productor y consumidor se probó con un doble en memoria (incluye caídas simuladas); `docker-compose.yml` y las llamadas a `confluent-kafka` están escritas pero no se corrieron contra un broker.
 - **Datos reales sin correr.** Las pruebas usan datos sintéticos con los mismos encabezados, formatos y anomalías, incluido un volumen igual al real (unos 25 s en total, con el broker simulado).
-- **Productor at-least-once** (D10).
+- **Productor at-least-once** (D10); el consumidor lo compensa descartando repetidos, así que Bronze no queda duplicado.
 - **Archivos pequeños en streaming** (D10).
 - **dbt** (`sources` de Bronze con pruebas) se declara al armar el proyecto dbt de Silver.

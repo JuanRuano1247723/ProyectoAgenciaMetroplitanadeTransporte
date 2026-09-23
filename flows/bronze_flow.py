@@ -2,7 +2,7 @@
 
 Orden de dependencias:
     topics ─► publicar(transmetro) ─► consumir(transmetro) ┐
-           └► publicar(aerometro)  ─► consumir(aerometro)  ├─► conciliar
+           └► publicar(aerometro)  ─► consumir(aerometro)  ├─► conciliar Bronze ─► dbt (staging, Silver, pruebas)
     catálogos, Transurbano, MetroRiel, CDC (en paralelo) ─┘
 
 Es idempotente: reejecutarlo con los mismos archivos no agrega filas (las tareas de carga
@@ -11,6 +11,7 @@ Cada tarea reintenta 2 veces; los reintentos son seguros por las garantías de c
 
     python -m flows.bronze_flow                      # todo
     python -m flows.bronze_flow --sin-streaming      # solo batch + CDC (no requiere Kafka)
+    python -m flows.bronze_flow --sin-silver         # solo Bronze
 """
 from __future__ import annotations
 
@@ -23,6 +24,7 @@ from bronze.conciliacion import a_markdown, conciliar
 from bronze.config import Config
 from bronze.fuentes import BATCH, CDC, FUENTES, STREAMING
 from bronze.ingesta_archivos import ingerir_archivo
+from flows.dbt_runner import construir_silver
 
 
 @task(name="ingesta-archivo", retries=2, retry_delay_seconds=10)
@@ -63,9 +65,15 @@ def tarea_conciliar(claves: list[str], estricto: bool) -> list[dict]:
     return filas
 
 
-@flow(name="bronze")
+@task(name="silver-dbt", retries=1, retry_delay_seconds=10)
+def tarea_silver() -> None:
+    """Vistas de Bronze + dbt build (semillas, staging, Silver y sus pruebas)."""
+    construir_silver(Config.desde_entorno())
+
+
+@flow(name="bronze-silver")
 def bronze_flow(incluir_streaming: bool = True, tamano_rafaga: int = 500, pausa: float = 2.0,
-                max_filas: int | None = None, estricto: bool = True) -> list[dict]:
+                max_filas: int | None = None, estricto: bool = True, incluir_silver: bool = True) -> list[dict]:
     run_id = nuevo_run_id()
     esperar = [tarea_archivo.submit(f.clave, run_id) for f in BATCH + CDC]
     claves = [f.clave for f in BATCH + CDC]
@@ -77,15 +85,19 @@ def bronze_flow(incluir_streaming: bool = True, tamano_rafaga: int = 500, pausa:
             esperar.append(tarea_consumir.submit(f.clave, run_id, wait_for=[pub]))
             claves.append(f.clave)
 
-    return tarea_conciliar.submit(claves, estricto, wait_for=esperar).result()
+    conciliacion = tarea_conciliar.submit(claves, estricto, wait_for=esperar)
+    if incluir_silver:
+        tarea_silver.submit(wait_for=[conciliacion]).result()
+    return conciliacion.result()
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--sin-streaming", action="store_true")
+    ap.add_argument("--sin-silver", action="store_true")
     ap.add_argument("--tamano-rafaga", type=int, default=500)
     ap.add_argument("--pausa", type=float, default=2.0)
     ap.add_argument("--max-filas", type=int)
     a = ap.parse_args()
     bronze_flow(incluir_streaming=not a.sin_streaming, tamano_rafaga=a.tamano_rafaga,
-                pausa=a.pausa, max_filas=a.max_filas)
+                pausa=a.pausa, max_filas=a.max_filas, incluir_silver=not a.sin_silver)
