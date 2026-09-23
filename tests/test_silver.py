@@ -1,6 +1,8 @@
 """Pruebas de Silver: corren dbt sobre un Bronze sintético con anomalías conocidas y comparan contra los CSV de origen."""
 import csv
+import hashlib
 import json
+import os
 import re
 import shutil
 from collections import defaultdict
@@ -232,7 +234,7 @@ def test_reconstruir_silver_no_cambia_ni_conteos_ni_huellas(silver):
     despues = contar_capas(silver)
     assert antes == despues
     assert all(r["filas"] > 0 for r in antes)                       # ninguna tabla quedó vacía
-    assert {r["capa"] for r in antes} == {"bronze", "staging", "silver"}
+    assert {r["capa"] for r in antes} == {"bronze", "staging", "silver", "gold"}
 
 
 def test_bronze_con_lineas_repetidas_detiene_silver_antes_de_construir_basura(tmp_path):
@@ -256,3 +258,141 @@ def test_bronze_con_lineas_repetidas_detiene_silver_antes_de_construir_basura(tm
     assert "stg_tm_validaciones" not in construidas and "silver_cuarentena" not in construidas
     log = (cfg.lake_dir / "dbt_logs" / "dbt.log").read_text(encoding="utf-8", errors="ignore")
     assert "source_llave_tecnica_unica_bronze_transmetro_validaciones" in log
+
+
+# ----------------------------------------------------------------------- seguridad: seudonimización
+def test_las_llaves_de_usuario_son_seudonimos_con_secreto_y_no_el_md5_revertible(silver):
+    secreto = os.environ["PSEUDONIMO_SECRETO"]
+    filas = wh(silver).execute(
+        "select operador, llave_original, usuario_sk, persona_id, id_numerico, regla_identidad "
+        "from silver.silver_usuario order by usuario_sk limit 300").fetchall()
+    assert filas
+    for op, llave, sk, persona, num, regla in filas:
+        assert sk == hashlib.sha256(f"{secreto}:{op}:{llave}".encode()).hexdigest()[:20]
+        assert sk != hashlib.md5(f"{op}:{llave}".encode()).hexdigest()          # el hash sin secreto se revierte en 0.05 s
+        assert re.fullmatch(r"[0-9a-f]{20}", sk) and re.fullmatch(r"[0-9a-f]{20}", persona)
+        if regla == "numerica_compartida":
+            assert persona == hashlib.sha256(f"{secreto}:persona:{num}".encode()).hexdigest()[:20]
+        else:
+            assert persona == sk
+
+
+def test_el_seudonimo_de_los_hechos_coincide_con_el_de_silver_usuario(silver):
+    con = wh(silver)
+    for tabla in ("silver_tm_validaciones", "silver_tu_transacciones", "silver_am_boardings", "silver_mr_viajes"):
+        assert con.execute(f"select count(*) from silver.{tabla} f left join silver.silver_usuario u using (usuario_sk) "
+                           f"where u.usuario_sk is null").fetchone()[0] == 0, tabla
+
+
+def test_el_secreto_no_aparece_en_la_base_ni_en_el_sql_compilado_ni_en_los_logs(silver):
+    secreto = os.environ["PSEUDONIMO_SECRETO"].encode()
+    revisados = 0
+    candidatos = [silver.lake_dir / "warehouse.duckdb"]
+    for carpeta in ("dbt_target", "dbt_logs"):
+        candidatos += [p for p in (silver.lake_dir / carpeta).rglob("*") if p.is_file()]
+    for p in candidatos:
+        assert secreto not in p.read_bytes(), f"el secreto aparece en {p}"
+        revisados += 1
+    assert revisados > 20
+
+
+def test_sin_secreto_el_ejecutor_falla_con_un_mensaje_que_dice_que_hacer(tmp_path, monkeypatch):
+    monkeypatch.delenv("PSEUDONIMO_SECRETO")
+    cfg = Config(data_dir=tmp_path / "d", lake_dir=tmp_path / "lake")
+    with pytest.raises(RuntimeError, match="PSEUDONIMO_SECRETO"):
+        construir_silver(cfg)
+
+
+# NOTA: la prueba "sin modelos Gold" quedó superada por test_gold_grano_y_conteos y
+# test_verificador_de_linaje_con_gold_real_no_encuentra_violaciones, una vez que Gold existe de verdad
+# en la fixture compartida `silver`. Se cubre el caso "0 modelos Gold" en tests/test_seguridad.py
+# (test_gold_que_lee_silver_es_valido y compañía usan un manifest sintético sin necesitar dbt).
+
+# ----------------------------------------------------------------------- Gold: grano, dimensiones y medidas
+def test_gold_grano_y_conteos(silver):
+    con = wh(silver)
+    # fact_abordaje: una fila por evento de entrada, para los cuatro operadores
+    conteo_por_transporte = dict(con.execute(
+        "select transporte_sk, count(*) from gold.fact_abordaje group by 1").fetchall())
+    assert set(conteo_por_transporte) == {"TM", "TU", "AM", "MR"}
+    assert conteo_por_transporte["TM"] == con.execute("select count(*) from silver.silver_tm_validaciones").fetchone()[0]
+    assert conteo_por_transporte["TU"] == con.execute("select count(*) from silver.silver_tu_transacciones").fetchone()[0]
+    assert conteo_por_transporte["AM"] == con.execute("select count(*) from silver.silver_am_boardings").fetchone()[0]
+    assert conteo_por_transporte["MR"] == con.execute("select count(*) from silver.silver_mr_viajes").fetchone()[0]
+    # fact_viaje: hoy solo MetroRiel puebla la tabla (grano genérico, sin forzar los otros operadores)
+    assert set(r[0] for r in con.execute("select distinct transporte_sk from gold.fact_viaje").fetchall()) == {"MR"}
+    assert con.execute("select count(*) from gold.fact_viaje").fetchone()[0] == \
+        con.execute("select count(*) from silver.silver_mr_viajes").fetchone()[0]
+
+
+def test_gold_sin_estaciones_huerfanas(silver):
+    con = wh(silver)
+    assert con.execute("select count(*) from gold.fact_abordaje where estacion_sk is null").fetchone()[0] == 0
+    assert con.execute("select count(*) from gold.fact_viaje where estacion_sk_entrada is null or estacion_sk_salida is null").fetchone()[0] == 0
+
+
+def test_gold_dim_transporte_marca_metroriel_como_trayecto_completo(silver):
+    con = wh(silver)
+    filas = dict(con.execute("select operador_cod, registra_trayecto_completo from gold.dim_transporte").fetchall())
+    assert filas == {"TM": False, "TU": False, "AM": False, "MR": True}
+
+
+def test_gold_dim_hora_24_filas_y_pico_es_booleano_derivado(silver):
+    con = wh(silver)
+    filas = con.execute("select hora, abordajes_totales_periodo, es_hora_pico from gold.dim_hora order by hora").fetchall()
+    assert [f[0] for f in filas] == list(range(24))
+    total_horas = sum(f[1] for f in filas)
+    total_abordajes = con.execute("select count(*) from gold.fact_abordaje").fetchone()[0]
+    assert total_horas == total_abordajes                          # dim_hora cuenta lo mismo que los hechos
+    picos = [f[0] for f in filas if f[2]]
+    if picos:
+        umbral = sum(f[1] for f in filas) / 24 * 1.5
+        assert all(dict((f[0], f[1]) for f in filas)[h] >= umbral for h in picos)
+
+
+def test_gold_dim_fecha_dia_habil_excluye_fines_de_semana_y_feriados(silver):
+    con = wh(silver)
+    malas = con.execute(
+        "select count(*) from gold.dim_fecha where es_dia_habil and dia_semana_num in (0, 6)").fetchone()[0]
+    assert malas == 0
+    feriados_habiles = con.execute(
+        "select count(*) from gold.dim_fecha where es_feriado and es_dia_habil").fetchone()[0]
+    assert feriados_habiles == 0
+
+
+def test_gold_dim_usuario_no_expone_llaves_crudas(silver):
+    con = wh(silver)
+    columnas = {c[0] for c in con.execute("describe gold.dim_usuario").fetchall()}
+    assert "llave_original" not in columnas and "id_numerico" not in columnas
+    assert {"usuario_sk", "persona_id"} <= columnas
+
+
+def test_gold_medidas_no_aditivas_no_se_almacenan_precalculadas(silver):
+    """Ninguna tabla Gold guarda una columna que sea claramente un promedio o porcentaje ya calculado."""
+    con = wh(silver)
+    for tabla in ("fact_abordaje", "fact_viaje"):
+        columnas = [c[0].lower() for c in con.execute(f"describe gold.{tabla}").fetchall()]
+        prohibidas = [c for c in columnas if any(p in c for p in ("promedio", "avg", "porcentaje", "pct", "ratio"))]
+        assert prohibidas == [], f"{tabla} guarda una razón precalculada: {prohibidas}"
+
+
+def test_gold_es_idempotente(silver):
+    """Construir Silver+Gold dos veces (ya se hizo en el fixture) no debe requerir estado nuevo:
+    reconstruir de nuevo sobre el mismo Bronze da exactamente los mismos conteos."""
+    tablas = ("dim_transporte", "dim_fecha", "dim_hora", "dim_estacion", "dim_usuario",
+             "fact_abordaje", "fact_viaje")
+    with wh(silver) as con:
+        antes = {t: con.execute(f"select count(*) from gold.{t}").fetchone()[0] for t in tablas}
+    construir_silver(silver)                                        # requiere el archivo sin conexiones abiertas
+    with wh(silver) as con:
+        despues = {t: con.execute(f"select count(*) from gold.{t}").fetchone()[0] for t in tablas}
+    assert antes == despues
+
+
+def test_verificador_de_linaje_con_gold_real_no_encuentra_violaciones(silver, monkeypatch, capsys):
+    from flows import verificar_linaje
+    monkeypatch.setenv("LAKE_DIR", str(silver.lake_dir))
+    assert verificar_linaje.main() == 0
+    salida = capsys.readouterr().out
+    assert "Modelos Gold encontrados: 7" in salida
+    assert "OK" in salida

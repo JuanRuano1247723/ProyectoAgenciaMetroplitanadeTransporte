@@ -18,6 +18,9 @@ vars:
   ventana_doble_lectura_s: 60
   # Zona horaria local de Guatemala (UTC-6 todo el año, sin horario de verano)
   zona_horaria_local: "America/Guatemala"
+  # dim_hora: una hora es "pico" si su total de abordajes supera este múltiplo del promedio horario.
+  # Se aplica sobre el dato real (ver models/gold/dim_hora.sql), no sobre un rango de horas supuesto.
+  umbral_hora_pico: 1.5
 
 models:
   metro:
@@ -27,6 +30,12 @@ models:
     silver:
       +materialized: table
       +schema: silver
+    # Reglas de Gold (las verifica flows/verificar_linaje.py):
+    #   - solo ref() a modelos de Silver o de Gold (nunca source() ni staging: Gold NUNCA lee Bronze)
+    #   - solo seudónimos (usuario_sk / persona_id); ninguna llave cruda de tarjeta
+    gold:
+      +materialized: table
+      +schema: gold
 
 seeds:
   metro:

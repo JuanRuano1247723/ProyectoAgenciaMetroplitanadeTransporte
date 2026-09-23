@@ -8,6 +8,21 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[1]
 
 
+def cargar_env(ruta: Path = RAIZ / ".env") -> None:
+    """Carga variables desde un archivo .env (KEY=VALUE, sin comillas obligatorias). No pisa el entorno real.
+    El archivo .env NO se sube a Git; el repositorio solo trae .env.example, sin valores reales."""
+    if not ruta.exists():
+        return
+    for linea in ruta.read_text(encoding="utf-8").splitlines():
+        linea = linea.strip()
+        if not linea or linea.startswith("#") or "=" not in linea:
+            continue
+        clave, valor = linea.split("=", 1)
+        valor = valor.strip().strip('"').strip("'")
+        if valor:
+            os.environ.setdefault(clave.strip(), valor)
+
+
 @dataclass(frozen=True)
 class Config:
     data_dir: Path
@@ -51,6 +66,7 @@ class Config:
 
     @classmethod
     def desde_entorno(cls) -> "Config":
+        cargar_env()
         return cls(
             data_dir=Path(os.getenv("DATA_DIR", RAIZ / "datos_red")),
             lake_dir=Path(os.getenv("LAKE_DIR", RAIZ / "lake")),

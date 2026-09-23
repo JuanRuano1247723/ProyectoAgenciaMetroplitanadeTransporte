@@ -1,0 +1,5 @@
+operador_cod,nombre,modo,registra_trayecto_completo,unidad_monetaria_origen,archivo_bronze
+TM,Transmetro,BRT,false,quetzales,transmetro_validaciones.csv
+TU,Transurbano,bus convencional,false,centavos,transurbano_transacciones.csv
+AM,Aerometro,teleferico,false,quetzales,aerometro_boardings.csv
+MR,MetroRiel,tren ligero,true,quetzales,metroriel_viajes.jsonl

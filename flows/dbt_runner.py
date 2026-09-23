@@ -15,7 +15,7 @@ from typing import Optional
 
 import duckdb
 
-from bronze.config import RAIZ, Config
+from bronze.config import RAIZ, Config, cargar_env
 from bronze.conciliacion import crear_vistas
 
 DBT_DIR = RAIZ / "dbt_metro"
@@ -31,12 +31,20 @@ TABLAS_SILVER = {
     "silver_llaves_transurbano": "llave", "silver_llaves_metroriel": "llave", "silver_llaves_aerometro": "llave",
     "silver_dq_conteo_por_regla": "regla",
 }
+TABLAS_GOLD_DIM = ["dim_transporte", "dim_fecha", "dim_hora", "dim_estacion", "dim_usuario"]
+TABLAS_GOLD_FACT = {"fact_abordaje": "evento_sk", "fact_viaje": "evento_sk"}
 
 
 def dbt(cfg: Config, *args: str, variables: Optional[dict] = None) -> None:
     """Ejecuta dbt en un subproceso (así libera su conexión a DuckDB al terminar).
     Lanza excepción si hay errores; las advertencias no hacen fallar la ejecución."""
-    env = {**os.environ, "LAKE_DIR": str(cfg.lake_dir.resolve())}
+    cargar_env()
+    if not os.environ.get("PSEUDONIMO_SECRETO"):
+        raise RuntimeError(
+            "Falta PSEUDONIMO_SECRETO. Es el secreto con el que se seudonimizan las llaves de usuario antes de Gold.\n"
+            "  Copia .env.example a .env y define un valor largo y aleatorio, o en PowerShell:\n"
+            "  $env:PSEUDONIMO_SECRETO = \"<valor largo y aleatorio>\"   (no lo subas a Git)")
+    env = {**os.environ, "LAKE_DIR": str(cfg.lake_dir.resolve()), "DBT_PLUGINS_DIR": str(DBT_DIR / "plugins")}
     cmd = [sys.executable, "-c", "import sys; from dbt.cli.main import cli; sys.exit(cli())",
            *args, "--project-dir", str(DBT_DIR), "--profiles-dir", str(DBT_DIR),
            "--log-path", str(cfg.lake_dir / "dbt_logs"), "--target-path", str(cfg.lake_dir / "dbt_target")]
@@ -75,14 +83,35 @@ def contar_capas(cfg: Config) -> list[dict]:
         n = wh.execute(f"select count(*) from silver.{t}").fetchone()[0]
         h = wh.execute(f"select coalesce(bit_xor(hash({llave})), 0) from silver.{t}").fetchone()[0]
         filas.append({"capa": "silver", "tabla": t, "filas": n, "huella": str(h)})
+    for t in TABLAS_GOLD_DIM:
+        existe = wh.execute(
+            "select count(*) from information_schema.tables where table_schema='gold' and table_name=?", [t]
+        ).fetchone()[0]
+        if existe:
+            n = wh.execute(f"select count(*) from gold.{t}").fetchone()[0]
+            filas.append({"capa": "gold", "tabla": t, "filas": n, "huella": ""})
+    for t, llave in TABLAS_GOLD_FACT.items():
+        existe = wh.execute(
+            "select count(*) from information_schema.tables where table_schema='gold' and table_name=?", [t]
+        ).fetchone()[0]
+        if existe:
+            n = wh.execute(f"select count(*) from gold.{t}").fetchone()[0]
+            h = wh.execute(f"select coalesce(bit_xor(hash({llave})), 0) from gold.{t}").fetchone()[0]
+            filas.append({"capa": "gold", "tabla": t, "filas": n, "huella": str(h)})
     wh.close()
     return filas
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("comando", choices=["build"])
+    ap.add_argument("comando", choices=["build", "docs"],
+                    help="build: semillas + modelos + pruebas. docs: genera el grafo de linaje (lake/dbt_target/static_index.html)")
     ap.add_argument("--sin-unificar-identidad", action="store_true")
     a = ap.parse_args()
-    construir_silver(Config.desde_entorno(),
-                     {"unificar_identidad_numerica": False} if a.sin_unificar_identidad else None)
+    cfg_ = Config.desde_entorno()
+    if a.comando == "docs":
+        crear_vistas(cfg_)
+        dbt(cfg_, "docs", "generate", "--static")
+        print(f"Linaje: abre {cfg_.lake_dir / 'dbt_target' / 'static_index.html'} en el navegador")
+    else:
+        construir_silver(cfg_, {"unificar_identidad_numerica": False} if a.sin_unificar_identidad else None)

@@ -1,3 +1,7 @@
+import os
+
+os.environ.setdefault("PSEUDONIMO_SECRETO", "secreto-de-prueba-solo-para-pytest")
+
 import pytest
 
 from bronze.config import Config
