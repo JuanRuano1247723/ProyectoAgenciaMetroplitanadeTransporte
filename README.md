@@ -4,6 +4,9 @@ Ingesta de los nueve archivos de la red metropolitana a un lake (Bronze) y su in
 
 - Diseño de Bronze: [`docs/DISENO_BRONZE.md`](docs/DISENO_BRONZE.md)
 - Diseño de Silver: [`docs/DISENO_SILVER.md`](docs/DISENO_SILVER.md)
+- Diseño de Gold (grano, matriz del bus, medidas): [`docs/DISENO_GOLD_GRANO.md`](docs/DISENO_GOLD_GRANO.md), DDL en [`dbt_metro/DDL_GOLD.sql`](dbt_metro/DDL_GOLD.sql)
+- Seguridad y datos personales: [`docs/SEGURIDAD_DATOS_PERSONALES.md`](docs/SEGURIDAD_DATOS_PERSONALES.md)
+- Bitácora de decisiones (Bronze, Silver, Gold, seguridad): [`docs/BITACORA_DECISIONES.md`](docs/BITACORA_DECISIONES.md)
 
 ## Estructura
 
@@ -13,7 +16,7 @@ dbt_metro/         proyecto dbt-duckdb: staging, Silver, cuarentena, semillas y 
 flows/             flujo de Prefect, ejecutor de dbt y evidencia de idempotencia
 tests/             55 pruebas pytest (datos sintéticos + doble en memoria de Kafka)
 sql/               consultas de verificación y de entregables
-docs/              diseño de Bronze y de Silver
+docs/              diseño de Bronze, Silver, Gold, seguridad y bitácora de decisiones
 datos_red/         aquí van los 9 archivos que genera generar_red_metropolitana.py
 docker-compose.yml Kafka (KRaft, un nodo)
 ```
@@ -45,6 +48,14 @@ python -m flows.consultas sql/verificacion_post_bronze.sql
 
 Con la pausa por defecto (500 mensajes, 2 s) publicar Transmetro tarda unos 24 minutos y Aerómetro unos 14.
 `--max-filas N` publica solo N filas; una nueva corrida continúa donde quedó.
+
+## Verificar Gold (linaje y datos personales)
+
+```bash
+python -m flows.verificar_linaje
+```
+
+Falla si algún modelo de `models/gold/` lee `source()`/staging en vez de Silver, o si expone una llave cruda de usuario (por nombre de columna o por el aspecto de sus valores). Se corre después de `python -m flows.dbt_runner build`.
 
 ## Si cambias de carpeta y conservas Kafka
 

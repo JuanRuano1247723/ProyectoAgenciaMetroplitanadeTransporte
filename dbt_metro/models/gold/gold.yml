@@ -1,0 +1,81 @@
+version: 2
+
+models:
+  - name: dim_transporte
+    columns:
+      - {name: transporte_sk, tests: [unique, not_null]}
+      - name: operador_cod
+        tests:
+          - accepted_values:
+              arguments: {values: ["TM", "TU", "AM", "MR"]}
+  - name: dim_fecha
+    columns:
+      - {name: fecha_sk, tests: [unique, not_null]}
+      - {name: fecha, tests: [unique, not_null]}
+  - name: dim_hora
+    columns:
+      - {name: hora_sk, tests: [unique, not_null]}
+      - name: hora
+        tests:
+          - accepted_values:
+              arguments: {values: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]}
+  - name: dim_estacion
+    columns:
+      - {name: estacion_sk, tests: [unique, not_null]}
+  - name: dim_usuario
+    columns:
+      - {name: usuario_sk, tests: [unique, not_null]}
+      - {name: persona_id, tests: [not_null]}
+  - name: fact_abordaje
+    columns:
+      - {name: evento_sk, tests: [unique, not_null]}
+      - name: transporte_sk
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_transporte'), field: transporte_sk}
+      - name: fecha_sk
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_fecha'), field: fecha_sk}
+      - name: hora_sk
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_hora'), field: hora_sk}
+      - name: usuario_sk
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_usuario'), field: usuario_sk}
+      - {name: abordajes, tests: [not_null]}
+      - {name: monto_gtq, tests: [not_null]}
+  - name: fact_viaje
+    columns:
+      - {name: evento_sk, tests: [unique, not_null]}
+      - name: transporte_sk
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_transporte'), field: transporte_sk}
+      - name: fecha_sk
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_fecha'), field: fecha_sk}
+      - name: usuario_sk
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_usuario'), field: usuario_sk}
+      - {name: viajes, tests: [not_null]}
+      - {name: duracion_s, tests: [not_null]}
+
+seeds:
+  - name: transporte_catalogo
+    columns:
+      - {name: operador_cod, tests: [unique, not_null]}
+  - name: feriados
+    columns:
+      - {name: fecha, tests: [unique, not_null]}

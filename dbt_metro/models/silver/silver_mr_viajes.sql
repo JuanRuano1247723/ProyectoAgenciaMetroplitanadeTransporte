@@ -1,6 +1,6 @@
 select
     evento_sk,
-    md5('metroriel:' || tarjeta)                                     as usuario_sk,
+    {{ pseudonimo("'metroriel:' || tarjeta") }}                         as usuario_sk,
     trip_id, tarjeta, estacion_entrada, estacion_salida,
     ts_entrada, ts_salida, cast(ts_entrada as date) as fecha, hour(ts_entrada) as hora_entrada,
     duracion_s,

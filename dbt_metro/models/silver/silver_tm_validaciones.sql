@@ -1,6 +1,6 @@
 select
     evento_sk,
-    md5('transmetro:' || tarjeta)                                   as usuario_sk,
+    {{ pseudonimo("'transmetro:' || tarjeta") }}                       as usuario_sk,
     validacion_id, tarjeta, estacion_id, linea, tipo,
     ts_local, cast(ts_local as date) as fecha, hour(ts_local)       as hora,
     tarifa_gtq,

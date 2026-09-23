@@ -1,6 +1,6 @@
 select
     evento_sk,
-    md5('aerometro:' || user_hash)                                   as usuario_sk,
+    {{ pseudonimo("'aerometro:' || user_hash") }}                       as usuario_sk,
     boarding_id, user_hash, station_code, axis, cabin_number,
     ts_utc, ts_local, cast(ts_local as date) as fecha, hour(ts_local) as hora,
     tarifa_gtq,

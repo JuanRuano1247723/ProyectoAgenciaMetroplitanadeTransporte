@@ -9,6 +9,10 @@ metro:
       path: "{{ env_var('LAKE_DIR') }}/warehouse.duckdb"
       schema: main
       threads: 4
+      # Carga PSEUDONIMO_SECRETO en memoria (nunca se escribe en el SQL, los logs ni la base)
+      module_paths: ["{{ env_var('DBT_PLUGINS_DIR', './plugins') }}"]
+      plugins:
+        - module: seguridad
       attach:
         - path: "{{ env_var('LAKE_DIR') }}/bronze_vistas.duckdb"
           alias: bronze_db
