@@ -1,0 +1,6 @@
+lake/
+salidas/
+dbt_metro/target/
+dbt_metro/logs/
+__pycache__/
+.pytest_cache/

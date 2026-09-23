@@ -1,0 +1,33 @@
+name: metro
+version: "1.0"
+config-version: 2
+profile: metro
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Estrategia de identidad (ver docs/DISENO_SILVER.md, sección 5):
+  # true  -> las llaves de Transmetro, Transurbano y MetroRiel con la misma parte numérica se tratan como la misma persona
+  # false -> cada (operador, llave) es un usuario distinto
+  unificar_identidad_numerica: true
+  # Ventana (segundos) para marcar una posible doble lectura de torniquete (misma tarjeta y estación, distinto id)
+  ventana_doble_lectura_s: 60
+  # Zona horaria local de Guatemala (UTC-6 todo el año, sin horario de verano)
+  zona_horaria_local: "America/Guatemala"
+
+models:
+  metro:
+    staging:
+      +materialized: table      # el staging se reconstruye completo en cada corrida ("se vacía")
+      +schema: staging
+    silver:
+      +materialized: table
+      +schema: silver
+
+seeds:
+  metro:
+    +schema: silver

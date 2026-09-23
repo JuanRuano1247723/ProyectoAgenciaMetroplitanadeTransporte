@@ -188,9 +188,9 @@ def test_archivo_nuevo_con_otro_hash_se_agrega_como_snapshot(entorno):
     f = FUENTES["tm_estaciones"]
     ingerir_archivo(cfg, f, nuevo_run_id())
     p = cfg.data_dir / f.archivo
-    p.write_text(p.read_text() + "TM-L1-99,Nueva,L1,Zona 4,14.4,-90.5\n")
+    p.write_text(p.read_text() + "TM-L1-99,Nueva,L1,Zona 4,14.4,-90.5\n")     # +1 fila => otro hash
     ingerir_archivo(cfg, f, nuevo_run_id())
-    assert n(cfg, "tm_estaciones") == 6 + 7                    # el snapshot anterior no se modifica
+    assert n(cfg, "tm_estaciones") == esp["tm_estaciones"]["filas"] * 2 + 1       # el snapshot anterior no se modifica
     assert len(q(cfg, "tm_estaciones", cols="DISTINCT _file_hash")) == 2
 
 
@@ -346,8 +346,8 @@ def test_productor_caida_repite_como_maximo_una_rafaga(entorno):
     total = broker.total(f.topic)
     assert esp[clave]["filas"] <= total <= esp[clave]["filas"] + 100        # at-least-once acotado
     ConsumidorBronze(cfg, f, cliente=ConsumidorFake(broker)).ejecutar()
-    lineas = {r[0] for r in q(cfg, clave, cols="_source_line_number")}
-    assert lineas == set(range(2, esp[clave]["filas"] + 2))                   # ninguna línea se perdió
+    lineas = [r[0] for r in q(cfg, clave, cols="_source_line_number")]
+    assert sorted(lineas) == list(range(2, esp[clave]["filas"] + 2))          # ninguna línea perdida NI repetida
 
 
 def test_productor_respeta_pausa_entre_rafagas(entorno):
@@ -387,3 +387,72 @@ def test_landing_conserva_copia_identica(entorno):
     copias = list(cfg.landing_dir.glob("**/*__metroriel_viajes.jsonl"))
     assert len(copias) == 1
     assert sha256_archivo(copias[0]) == sha256_archivo(cfg.data_dir / "metroriel_viajes.jsonl")
+
+
+# ----------------------------------------------------------------------- repetidos de transporte
+def test_republicar_desde_un_lake_nuevo_no_duplica_bronze(entorno, tmp_path):
+    """Caso real: se cambia de carpeta (lake vacío) pero Kafka conserva los mensajes de la corrida anterior."""
+    from bronze.config import Config
+    cfg, esp = entorno
+    clave = "transmetro_validaciones"
+    f = FUENTES[clave]
+    broker = BrokerFake(cfg.kafka_particiones)
+    stream_completo(cfg, clave, broker)                                        # corrida 1
+    cfg_b = Config(**{**cfg.__dict__, "lake_dir": tmp_path / "lake_nuevo"})
+    stream_completo(cfg_b, clave, broker)                                      # corrida 2: lake nuevo, mismo Kafka
+    assert broker.total(f.topic) == 2 * esp[clave]["filas"]                    # el topic sí tiene todo repetido
+    assert n(cfg_b, clave) == esp[clave]["filas"]                              # Bronze no
+    assert q(cfg_b, clave, cols="count(DISTINCT (_file_hash, _source_line_number))")[0][0] == esp[clave]["filas"]
+    reg = [r for r in leer_log(cfg_b) if r["etapa"] == "stream_consume"][-1]
+    assert f"repetidos_de_transporte={esp[clave]['filas']}" in reg["observaciones"]
+    assert [r["estado"] for r in conciliar(cfg_b, [clave])] == ["OK"]
+    # los duplicados que vienen DENTRO del archivo (líneas distintas) se siguen conservando
+    dup = q(cfg_b, clave, cols="count(*) - count(DISTINCT (validacion_id, tarjeta, estacion_id, linea, fecha_hora, tarifa, tipo))")[0][0]
+    assert dup == 30
+
+
+def test_repetidos_no_se_reprocesan_tras_reiniciar_el_consumidor(entorno):
+    cfg, esp = entorno
+    clave = "aerometro_boardings"
+    f = FUENTES[clave]
+    broker = BrokerFake(cfg.kafka_particiones)
+    stream_completo(cfg, clave, broker)
+    # simula la corrida "nueva": el productor republica (log de productor olvidado)
+    for p in cfg.log_dir.glob("stream_produce__*"):
+        p.unlink()
+    for p in cfg.checkpoints_dir.glob("*.json"):
+        p.unlink()
+    publicar_archivo(cfg, f, cliente=ProductorFake(broker), tamano_rafaga=300, pausa=0, dormir=lambda s: None)
+    ConsumidorBronze(cfg, f, cliente=ConsumidorFake(broker)).ejecutar()
+    assert broker.total(f.topic) == 2 * esp[clave]["filas"]
+    assert n(cfg, clave) == esp[clave]["filas"]
+
+
+def test_reiniciar_consumidor_reconstruye_desde_kafka(entorno):
+    from bronze.streaming import reiniciar_consumidor
+    cfg, esp = entorno
+    clave = "transmetro_validaciones"
+    f = FUENTES[clave]
+    broker = BrokerFake(cfg.kafka_particiones)
+    stream_completo(cfg, clave, broker)
+    simulacion = reiniciar_consumidor(cfg, f)                                  # sin confirmar: no borra
+    assert simulacion["eliminaria"] and n(cfg, clave) == esp[clave]["filas"]
+    reiniciar_consumidor(cfg, f, confirmar=True)
+    assert n(cfg, clave) == 0 and not (cfg.commits_dir / f.topic).exists()
+    assert (cfg.landing_dir / "transmetro" / "validaciones").exists()          # landing intacto
+    ConsumidorBronze(cfg, f, cliente=ConsumidorFake(broker)).ejecutar()        # Kafka conserva los mensajes
+    assert n(cfg, clave) == esp[clave]["filas"]
+    assert [r["estado"] for r in conciliar(cfg, [clave])] == ["OK"]
+
+
+def test_conciliacion_detecta_filas_repetidas_de_bronze(entorno):
+    """Si Bronze ya quedó con la misma línea dos veces (versión anterior del consumidor), la conciliación lo dice."""
+    import shutil
+    cfg, esp = entorno
+    clave = "aerometro_boardings"
+    stream_completo(cfg, clave, BrokerFake(cfg.kafka_particiones))
+    origen = next((cfg.bronze_dir / "aerometro" / "boardings").glob("**/part-k*.parquet"))
+    filas = pq.read_table(origen).num_rows
+    shutil.copy(origen, origen.with_name("part-k9-000000000000-000000000001.parquet"))
+    r = conciliar(cfg, [clave])[0]
+    assert r["estado"] == "DUPLICADOS_TECNICOS" and r["duplicadas_tecnicas"] == filas
