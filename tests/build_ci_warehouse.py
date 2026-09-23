@@ -52,7 +52,7 @@ def main(out: Path) -> None:
     ruta = crear_vistas(cfg)
 
     # 6. Move/copy the views DB to the requested output path
-    if ruta.resolve() != out.resolve():
+    if Path(ruta).resolve() != out.resolve():
         out.write_bytes(Path(ruta).read_bytes())
     print(f"CI warehouse ready at {out}")
 
@@ -60,4 +60,5 @@ def main(out: Path) -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", type=Path, default=Path(".ci/warehouse.duckdb"))
-    main(ap.parse_args())
+    args = ap.parse_args()
+    main(args.out)
