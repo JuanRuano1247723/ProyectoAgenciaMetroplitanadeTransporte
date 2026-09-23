@@ -49,3 +49,12 @@ seeds:
     columns:
       - {name: zona_id, tests: [unique, not_null]}
       - {name: clave_normalizada, tests: [unique, not_null]}
+  - name: silver_evento_unificado
+    columns:
+      - {name: evento_sk, tests: [unique, not_null]}
+      - {name: persona_id, tests: [not_null]}
+      - {name: ts_local, tests: [not_null]}
+      - name: operador_cod
+        tests:
+          - accepted_values:
+              arguments: {values: ["TM", "TU", "AM", "MR"]}

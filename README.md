@@ -114,11 +114,4 @@ python -m flows.dbt_runner build --sin-unificar-identidad
 
 `DATA_DIR`, `LAKE_DIR`, `KAFKA_BOOTSTRAP`, `KAFKA_PARTICIONES`, `MICROLOTE_FILAS`, `MICROLOTE_SEGUNDOS`, `CHUNK_FILAS`.
 
-## Todo con Prefect
-
-```bash
-python -m flows.bronze_flow                 # batch + CDC + streaming + conciliación
-python -m flows.bronze_flow --sin-streaming # no requiere Kafka
-```
-
 Reejecutar cualquier comando con los mismos archivos no agrega filas.

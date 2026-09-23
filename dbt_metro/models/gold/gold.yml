@@ -79,3 +79,15 @@ seeds:
   - name: feriados
     columns:
       - {name: fecha, tests: [unique, not_null]}
+  - name: agg_demanda_zona_hora
+    columns:
+      - {name: abordajes, tests: [not_null]}
+  - name: agg_cobertura_zona
+    columns:
+      - {name: zona_id, tests: [unique, not_null]}
+  - name: agg_usuarios_por_combinacion
+    columns:
+      - {name: combinacion, tests: [unique, not_null]}
+  - name: agg_caso_metroriel
+    columns:
+      - {name: zona_id, tests: [unique, not_null]}

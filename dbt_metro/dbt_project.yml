@@ -21,6 +21,13 @@ vars:
   # dim_hora: una hora es "pico" si su total de abordajes supera este múltiplo del promedio horario.
   # Se aplica sobre el dato real (ver models/gold/dim_hora.sql), no sobre un rango de horas supuesto.
   umbral_hora_pico: 1.5
+  # Ventana (minutos) para inferir un transbordo entre operadores (agg_transbordo_temporal, analysis/diagnostico_identidad)
+  ventana_transbordo_min: 60
+  # Fecha de corte de la tabla de features. Vacío = última fecha con datos. Para fijarla:
+  #   python -m flows.dbt_runner build   y   --vars '{fecha_corte: "2026-07-15"}'
+  fecha_corte: ""
+  # Zonas del caso MetroRiel (enunciado 2.1); lista SQL
+  zonas_caso_metroriel: "12, 8, 1, 6, 17"
 
 models:
   metro:
@@ -36,6 +43,10 @@ models:
     gold:
       +materialized: table
       +schema: gold
+    # Capa de features (rúbrica 2.3): se construye desde SILVER, no desde Gold (flows/verificar_linaje.py lo verifica)
+    features:
+      +materialized: table
+      +schema: features
 
 seeds:
   metro:
