@@ -148,7 +148,7 @@ CREATE TABLE gold.fact_viaje (
     duracion_s                INTEGER         NOT NULL,          -- medida aditiva
     tarifa_gtq                DECIMAL(10,2)   NOT NULL,          -- medida aditiva
     distancia_km              DOUBLE,                            -- medida aditiva con cobertura parcial (ver arriba)
-    duracion_no_coincide       BOOLEAN         NOT NULL,          -- degenerado: heredado de la advertencia en Silver
+    duracion_no_coincide       BOOLEAN         NOT NULL,          -- degenerado: heredado de la advertencia en Silver → Trabajando en ello
     _file_hash                VARCHAR         NOT NULL,
     _source_line_number       BIGINT          NOT NULL
 );
