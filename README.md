@@ -49,13 +49,23 @@ python -m flows.consultas sql/verificacion_post_bronze.sql
 Con la pausa por defecto (500 mensajes, 2 s) publicar Transmetro tarda unos 24 minutos y Aerómetro unos 14.
 `--max-filas N` publica solo N filas; una nueva corrida continúa donde quedó.
 
+## Fase 2: features, agregados de Gold y Tableau
+
+```bash
+python -m flows.dbt_runner build                       # incluye silver_evento_unificado, features y agg_* con sus pruebas
+python -m flows.consultas sql/entregables_fase2.sql    # cifras para el tablero y la recomendación
+python -m flows.exportar_tableau --incluir-hechos      # CSV de Gold en salidas/tableau/ (si no hay conector DuckDB)
+```
+
+Diseño y guía del tablero: `docs/DISENO_FASE2.md`. Gobernanza: `docs/DICCIONARIO_DATOS_GOLD.md`, `docs/DEFINICIONES_OFICIALES.md`, `docs/DICCIONARIO_FEATURES.md`.
+
 ## Verificar Gold (linaje y datos personales)
 
 ```bash
 python -m flows.verificar_linaje
 ```
 
-Falla si algún modelo de `models/gold/` lee `source()`/staging en vez de Silver, o si expone una llave cruda de usuario (por nombre de columna o por el aspecto de sus valores). Se corre después de `python -m flows.dbt_runner build`.
+Falla si algún modelo de `models/gold/` o `models/features/` lee `source()`/staging en vez de Silver, o si expone una llave cruda de usuario (por nombre de columna o por el aspecto de sus valores). Se corre después de `python -m flows.dbt_runner build`.
 
 ## Si cambias de carpeta y conservas Kafka
 
