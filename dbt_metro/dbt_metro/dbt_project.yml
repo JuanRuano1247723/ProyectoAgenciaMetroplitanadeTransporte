@@ -1,0 +1,53 @@
+name: metro
+version: "1.0"
+config-version: 2
+profile: metro
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Estrategia de identidad (ver docs/DISENO_SILVER.md, sección 5):
+  # true  -> las llaves de Transmetro, Transurbano y MetroRiel con la misma parte numérica se tratan como la misma persona
+  # false -> cada (operador, llave) es un usuario distinto
+  unificar_identidad_numerica: true
+  # Ventana (segundos) para marcar una posible doble lectura de torniquete (misma tarjeta y estación, distinto id)
+  ventana_doble_lectura_s: 60
+  # Zona horaria local de Guatemala (UTC-6 todo el año, sin horario de verano)
+  zona_horaria_local: "America/Guatemala"
+  # dim_hora: una hora es "pico" si su total de abordajes supera este múltiplo del promedio horario.
+  # Se aplica sobre el dato real (ver models/gold/dim_hora.sql), no sobre un rango de horas supuesto.
+  umbral_hora_pico: 1.5
+  # Ventana (minutos) para inferir un transbordo entre operadores (agg_transbordo_temporal, analysis/diagnostico_identidad)
+  ventana_transbordo_min: 60
+  # Fecha de corte de la tabla de features. Vacío = última fecha con datos. Para fijarla:
+  #   python -m flows.dbt_runner build   y   --vars '{fecha_corte: "2026-07-15"}'
+  fecha_corte: ""
+  # Zonas del caso MetroRiel (enunciado 2.1); lista SQL
+  zonas_caso_metroriel: "12, 8, 1, 6, 17"
+
+models:
+  metro:
+    staging:
+      +materialized: table      # el staging se reconstruye completo en cada corrida ("se vacía")
+      +schema: staging
+    silver:
+      +materialized: table
+      +schema: silver
+    # Reglas de Gold (las verifica flows/verificar_linaje.py):
+    #   - solo ref() a modelos de Silver o de Gold (nunca source() ni staging: Gold NUNCA lee Bronze)
+    #   - solo seudónimos (usuario_sk / persona_id); ninguna llave cruda de tarjeta
+    gold:
+      +materialized: table
+      +schema: gold
+    # Capa de features (rúbrica 2.3): se construye desde SILVER, no desde Gold (flows/verificar_linaje.py lo verifica)
+    features:
+      +materialized: table
+      +schema: features
+
+seeds:
+  metro:
+    +schema: silver
