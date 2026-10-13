@@ -29,8 +29,10 @@ TABLAS_SILVER = {
     "silver_cuarentena": "cuarentena_sk", "silver_padron_scd2": "padron_sk",
     "silver_padron_vigente": "padron_sk", "silver_usuario": "usuario_sk", "silver_estacion": "estacion_sk",
     "silver_llaves_transurbano": "llave", "silver_llaves_metroriel": "llave", "silver_llaves_aerometro": "llave",
-    "silver_dq_conteo_por_regla": "regla",
+    "silver_dq_conteo_por_regla": "regla", "silver_evento_unificado": "evento_sk",
 }
+TABLAS_FASE2 = {"features.features_usuario": "persona_id", "gold.agg_cobertura_zona": "zona_id",
+                "gold.agg_caso_metroriel": "zona_id", "gold.agg_usuarios_por_combinacion": "combinacion"}
 TABLAS_GOLD_DIM = ["dim_transporte", "dim_fecha", "dim_hora", "dim_estacion", "dim_usuario"]
 TABLAS_GOLD_FACT = {"fact_abordaje": "evento_sk", "fact_viaje": "evento_sk"}
 
@@ -98,6 +100,13 @@ def contar_capas(cfg: Config) -> list[dict]:
             n = wh.execute(f"select count(*) from gold.{t}").fetchone()[0]
             h = wh.execute(f"select coalesce(bit_xor(hash({llave})), 0) from gold.{t}").fetchone()[0]
             filas.append({"capa": "gold", "tabla": t, "filas": n, "huella": str(h)})
+    for t, llave in TABLAS_FASE2.items():
+        esq, nom = t.split(".")
+        if wh.execute("select count(*) from information_schema.tables where table_schema=? and table_name=?",
+                      [esq, nom]).fetchone()[0]:
+            n = wh.execute(f"select count(*) from {t}").fetchone()[0]
+            h = wh.execute(f"select coalesce(bit_xor(hash({llave})), 0) from {t}").fetchone()[0]
+            filas.append({"capa": esq, "tabla": nom, "filas": n, "huella": str(h)})
     wh.close()
     return filas
 

@@ -234,7 +234,7 @@ def test_reconstruir_silver_no_cambia_ni_conteos_ni_huellas(silver):
     despues = contar_capas(silver)
     assert antes == despues
     assert all(r["filas"] > 0 for r in antes)                       # ninguna tabla quedó vacía
-    assert {r["capa"] for r in antes} == {"bronze", "staging", "silver", "gold"}
+    assert {r["capa"] for r in antes} == {"bronze", "staging", "silver", "gold", "features"}
 
 
 def test_bronze_con_lineas_repetidas_detiene_silver_antes_de_construir_basura(tmp_path):
@@ -394,5 +394,5 @@ def test_verificador_de_linaje_con_gold_real_no_encuentra_violaciones(silver, mo
     monkeypatch.setenv("LAKE_DIR", str(silver.lake_dir))
     assert verificar_linaje.main() == 0
     salida = capsys.readouterr().out
-    assert "Modelos Gold encontrados: 7" in salida
+    assert "Modelos Gold encontrados: 13; modelos de features: 1" in salida
     assert "OK" in salida

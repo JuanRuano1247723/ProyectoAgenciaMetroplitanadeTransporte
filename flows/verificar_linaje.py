@@ -45,6 +45,29 @@ def violaciones_linaje(manifest: dict) -> list[str]:
     return fuera
 
 
+def es_features(nodo: dict) -> bool:
+    return nodo.get("resource_type") == "model" and (
+        str(nodo.get("path", "")).replace("\\", "/").startswith("features/") or nodo.get("schema") == "features")
+
+
+def violaciones_features(manifest: dict) -> list[str]:
+    """2.3: la tabla de features "se debe sacar de Silver, no de Gold" (necesita el detalle atómico)."""
+    nodos = manifest["nodes"]
+    fuera = []
+    for nodo in nodos.values():
+        if not es_features(nodo):
+            continue
+        for dep in nodo["depends_on"]["nodes"]:
+            if dep.startswith("source."):
+                fuera.append(f"{nodo['name']} lee directamente de Bronze ({dep}).")
+            elif dep.startswith("model."):
+                d = nodos[dep]
+                if not (d.get("schema") == "silver" or str(d.get("path", "")).startswith("silver/")):
+                    fuera.append(f"{nodo['name']} depende de {d['name']} (capa {d.get('schema')}); "
+                                 f"las features solo pueden salir de Silver, no de Gold ni de staging.")
+    return fuera
+
+
 def violaciones_datos_personales(con, esquema: str = "gold", muestra: int = 5000) -> list[str]:
     fuera = []
     columnas = con.execute(
@@ -72,15 +95,17 @@ def main() -> int:
     manifest = json.loads(manifest_p.read_text(encoding="utf-8"))
     n_gold = sum(es_gold(n) for n in manifest["nodes"].values())
     con = duckdb.connect(str(wh_p), read_only=True)
+    n_feat = sum(es_features(n) for n in manifest["nodes"].values())
     problemas = violaciones_linaje(manifest) + (violaciones_datos_personales(con) if n_gold else [])
+    problemas += violaciones_features(manifest) + (violaciones_datos_personales(con, "features") if n_feat else [])
     con.close()
-    print(f"Modelos Gold encontrados: {n_gold}")
+    print(f"Modelos Gold encontrados: {n_gold}; modelos de features: {n_feat}")
     if not n_gold:
         print("(Aún no hay modelos en models/gold: nada que verificar. Las reglas se aplicarán al crear el primero.)")
     for p in problemas:
         print("  VIOLACIÓN:", p)
     if not problemas:
-        print("OK: Gold solo lee Silver y no expone llaves crudas.")
+        print("OK: Gold y features solo leen Silver y no exponen llaves crudas.")
     return 1 if problemas else 0
 
 
