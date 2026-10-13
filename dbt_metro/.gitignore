@@ -1,0 +1,12 @@
+lake/
+salidas/
+dbt_metro/target/
+dbt_metro/logs/
+__pycache__/
+.pytest_cache/
+
+# Secretos y datos: nunca al repositorio
+.env
+*.duckdb
+datos_red/*
+!datos_red/.gitkeep
