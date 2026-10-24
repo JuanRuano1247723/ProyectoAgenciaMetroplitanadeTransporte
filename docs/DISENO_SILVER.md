@@ -61,7 +61,7 @@ Cada fila de los hechos lleva `evento_sk` (hash de `_file_hash` + `_source_line_
 | Montos | `DECIMAL(10,2)` en quetzales. Transurbano viene en centavos (`65`, `130`) y se divide entre 100 |
 | Zona | `zona_id` conformado (sección 6) |
 | Llaves | Se recortan espacios. La parte numérica se extrae solo para la identidad (sección 5) |
-| `cod_estado` (Transurbano) | Se conserva sin interpretar: no hay catálogo. Es una pregunta abierta para el profesor |
+| `cod_estado` (Transurbano) | Los estados 7 y 9 son transacciones rechazadas por el operador: van a cuarentena (regla `transaccion_rechazada`, variable `estados_transurbano_rechazados`). Los demás valores se conservan sin interpretar |
 
 ## 5. Identidad del usuario
 
@@ -150,4 +150,4 @@ Escribe `evidencia/idempotencia_<fecha>.md`. Ese es el entregable de las dos cor
 - **Llaves con formato MR en el padrón.** Hoy van a cuarentena (`llave_formato_no_transmetro`). Hay indicios de que no son tarjetas de Transmetro con formato sucio: en la exploración, el solapamiento numérico entre el padrón y las validaciones (17,430) es idéntico al solapamiento por llave exacta `TC-` (17,430), y el padrón tiene 22,462 partes numéricas para 22,462 llaves que no son `SIN-TARJETA`. Es decir, los números de las llaves `MR` no coinciden con ninguna tarjeta que viaje en Transmetro, así que normalizarlas a `TC-` no añadiría coincidencias. Es una inferencia sobre conteos agregados; la consulta de diagnóstico de `sql/entregables_silver.sql` la comprueba directamente.
 - **Validaciones sin padrón.** Se conservan con la advertencia `tarjeta_sin_padron`: no se inventan datos del padrón.
 - **Malformadas de Bronze** (0 en estos datos) viven en `bronze/_malformed` y no se replican en la cuarentena de Silver.
-- **`cod_estado`** sin interpretar. **Gold** (1.4: grano, matriz del bus, hechos, dimensiones y DDL) es el siguiente paso.
+- **`cod_estado`**: solo se interpretan 7 y 9 (rechazadas, según corrección del profesor); el resto sigue sin catálogo. **Gold** (1.4: grano, matriz del bus, hechos, dimensiones y DDL) es el siguiente paso.

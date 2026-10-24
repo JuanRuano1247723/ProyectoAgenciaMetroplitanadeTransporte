@@ -61,6 +61,12 @@ def test_conteos_por_regla_coinciden_con_las_anomalias_del_origen(silver):
 
     assert dq[("transurbano_transacciones", "fecha_futura")] == (sum(r[0].endswith("/2027") for r in tu),) * 2
     assert dq[("transurbano_transacciones", "cod_parada_nulo")] == (sum(r[3] == "" for r in tu),) * 2
+    rechazadas = sum(r[6] in ("7", "9") for r in tu)
+    assert rechazadas > 0
+    assert dq[("transurbano_transacciones", "transaccion_rechazada")][0] == rechazadas
+    assert wh(cfg).execute("select count(*) from silver.silver_tu_transacciones where cod_estado in ('7', '9')").fetchone()[0] == 0
+    assert wh(cfg).execute("select count(*) from silver.silver_cuarentena where fuente = 'transurbano_transacciones' "
+                           "and list_contains(string_split(reglas_incumplidas, ','), 'transaccion_rechazada')").fetchone()[0] == rechazadas
     assert dq[("cdc_padron_usuarios", "llave_centinela")] == (sum(r[3] == "SIN-TARJETA" for r in cdc),) * 2
     assert dq[("cdc_padron_usuarios", "llave_formato_no_transmetro")] == \
         (sum(bool(re.match(r"^MR\d{7}$", r[3])) for r in cdc),) * 2

@@ -50,3 +50,14 @@ SELECT count(*) AS llaves_mr_en_padron,
            SELECT 1 FROM staging.stg_tm_validaciones v
            WHERE v.tarjeta = 'TC-' || lpad(substr(c.tarjeta, 3), 8, '0'))) AS con_tc_equivalente_en_validaciones
 FROM (SELECT DISTINCT tarjeta FROM staging.stg_cdc_padron WHERE regexp_matches(tarjeta, '^MR[0-9]{7}$')) c;
+
+.print '== 1.3  Cuadratura total con números: Bronze = Silver + cuarentena'
+WITH s AS (
+    SELECT count(*) AS n FROM silver.silver_tm_validaciones UNION ALL
+    SELECT count(*) FROM silver.silver_tu_transacciones UNION ALL
+    SELECT count(*) FROM silver.silver_am_boardings UNION ALL
+    SELECT count(*) FROM silver.silver_mr_viajes UNION ALL
+    SELECT count(*) FROM staging.stg_cdc_padron WHERE len(reglas_rechazo) = 0)
+SELECT (SELECT sum(n) FROM s) + (SELECT count(*) FROM silver.silver_cuarentena) AS total_bronze,
+       (SELECT sum(n) FROM s) AS en_silver,
+       (SELECT count(*) FROM silver.silver_cuarentena) AS en_cuarentena;

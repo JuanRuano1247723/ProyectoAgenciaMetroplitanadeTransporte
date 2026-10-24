@@ -31,6 +31,7 @@ El detalle de cada una está en `DISENO_BRONZE.md`, `DISENO_SILVER.md`, `DISENO_
 | S-08 | Zona conformada con semilla `dim_zona` (25 zonas y municipios) y macro `clave_zona` | Un mapeo manual por catálogo | Lo no mapeado no falla en silencio: avisa | Aceptada |
 | S-09 | Identidad en dos capas: cada (operador, llave) es un usuario, más una **hipótesis** de persona por parte numérica | Unificar sin declararlo; no unificar | El solapamiento observado es el del azar: no prueba ni descarta identidad. Se apaga con una variable | Aceptada, con límite declarado |
 | S-10 | Aerómetro: UTC−6 fijo | Zona con horario de verano | Guatemala no lo usa; la ventana 04:00–22:59 coincide con los otros tres operadores | Aceptada |
+| S-11 | Transurbano: `cod_estado` 7 y 9 (transacción rechazada) → **rechazo**, a cuarentena con la regla `transaccion_rechazada` | Dejar `cod_estado` sin interpretar y conservar esas filas en Silver | Corrección del profesor (1.3): una transacción rechazada no es un abordaje y inflaba la demanda. Los estados se configuran con la variable `estados_transurbano_rechazados`. El catálogo de llaves (1.2) no cambia: sigue tomando las llaves de todas las filas del archivo | Aceptada |
 
 ## Manejo de nulos y de cuarentena
 
@@ -70,10 +71,23 @@ El detalle de cada una está en `DISENO_BRONZE.md`, `DISENO_SILVER.md`, `DISENO_
 | G-08 | `dim_usuario` (wrapper de Gold) excluye `llave_original` e `id_numerico`, aunque `silver_usuario` sí los tiene | Exponer todas las columnas de `silver_usuario` en Gold | Gold es la capa que puede llegar a un tablero; una llave cruda ahí anula la seudonimización de Silver. Verificado por `flows/verificar_linaje.py` | Aceptada |
 | G-09 | `distancia_km` es aditiva pero con cobertura parcial (NULL si alguna estación no trae `km`) | Excluir la medida hasta tener `km` para las cuatro redes | Solo `mr_estaciones` trae `km` hoy; excluirla pierde valor para MetroRiel, que sí la puede usar completa | Aceptada, límite declarado |
 | G-10 | Ninguna razón (promedio, porcentaje, tasa) se guarda precalculada; siempre numerador y denominador aditivos | Guardar `tarifa_promedio`, `duracion_promedio`, etc. como columnas | Promediar promedios ya agregados da un número incorrecto; el numerador/denominador se puede reagregar a cualquier nivel | Aceptada, verificada (`test_gold_medidas_no_aditivas_no_se_almacenan_precalculadas`) |
-| G-11 | "Viajes del mes": definición oficial con dueño | Dejar que cada quien calcule con su propio criterio | Cinco puntos (cuarentena, transbordos, abordaje vs. viaje, mes UTC vs. local, mes incompleto) hacen que dos personas obtengan números distintos | **Abierta** |
+| G-11 | "Viajes del mes": definición oficial con dueño | Dejar que cada quien calcule con su propio criterio | Cinco puntos (cuarentena, transbordos, abordaje vs. viaje, mes UTC vs. local, mes incompleto) hacen que dos personas obtengan números distintos | Cerrada en `DEFINICIONES_OFICIALES.md` (falta asignar dueños) |
 
 ## Abiertas
 
 - **Llaves del padrón que no son `TC`, `MR` ni `SIN-TARJETA`:** 5,223 filas (4,038 llaves) están en cuarentena sin haberse inspeccionado. Pueden cambiar los conteos de activas y de bajas y la decisión de identidad.
-- **Cómo genera las llaves el generador de datos** y qué significa `cod_estado`.
+- **Cómo genera las llaves el generador de datos** y qué significan los demás valores de `cod_estado` (solo 7 y 9 están resueltos: S-11).
 - **Resultado de la prueba de hash de Aerómetro:** si es opaco o derivable de un id.
+
+## Fase 2: tablero, recomendación y features
+
+| ID | Decisión | Alternativa descartada | Por qué | Estado |
+|---|---|---|---|---|
+| F-01 | `silver_evento_unificado`: un abordaje por fila de los cuatro operadores, con `persona_id`, zona y hora local, solo con seudónimos | Que las features y los agregados repitan cada uno el `union all` de los cuatro silver_* | Una sola definición de "evento" y de "persona"; conserva `_file_hash` y línea para el rastro al crudo | Aceptada, verificada (`assert_evento_unificado_concilia_con_silver`) |
+| F-02 | Features desde Silver (`models/features/`), con una regla de linaje que falla si leen Gold | Construirlas sobre `fact_abordaje` | La rúbrica lo exige: Gold ya fijó un grano y el feature engineering necesita el detalle atómico | Aceptada, verificada (`violaciones_features`) |
+| F-03 | Entidad de features = `persona_id`, fecha de corte declarada (por defecto la última con datos), solo eventos ≤ corte | Una fila por `usuario_sk` (operador, llave) | `n_modos` y "modo más usado" no tienen sentido por operador; el corte evita fuga de información | Aceptada; **depende de S-09** |
+| F-04 | "Viaje" = abordaje que no es TRANSBORDO de Transmetro; "usuario activo" = ≥ 1 viaje en 30 días | Contar todo abordaje como viaje | Un transbordo infla los viajes (punto 2 de DISENO_GOLD_GRANO §6) | Aceptada |
+| F-05 | Cobertura desde `dim_zona` con LEFT JOIN, con `sin_servicio` (infraestructura) y `sin_servicio_efectivo` (uso) | Partir de las estaciones | Partir de las estaciones hace desaparecer justo las zonas sin servicio | Aceptada, verificada (`test_cobertura_incluye_las_zonas_sin_estaciones`) |
+| F-06 | Transbordo con tres lecturas: personas por combinación (partición, aditiva), TRANSBORDO de Transmetro y transbordo inferido por ventana de 60 min | Una sola cifra de "usuarios multimodo" | Todas dependen de la hipótesis de identidad; mostrar las tres evita que una sola se tome por verdad. `diagnostico_identidad` compara contra un placebo | Aceptada; la hipótesis sigue abierta |
+| F-07 | Tableau sobre agregados `agg_*` (pequeños) y, para rastrear al crudo, sobre `fact_abordaje` con `evento_sk`, `_file_hash` y línea | Solo hechos | El tiempo de consulta del tablero es una métrica de la rúbrica | Aceptada |
+

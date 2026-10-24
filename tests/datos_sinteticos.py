@@ -37,8 +37,12 @@ def generar(d: Path, seed: int = 7, n_tm=2000, n_tu=3000, n_am=1500, n_mr=1200, 
     filas = []
     for i in range(n_tu):
         cod = "" if i % 75 == 0 else f"R-{rnd.randint(101, 120)}-{rnd.randint(1, 8)}"
-        filas.append(f"0{rnd.randint(1, 5)}/06/2026,{rnd.randint(4, 22):02d}:{rnd.randint(0, 59):02d}:{rnd.randint(0, 59):02d},"
-                     f"{rnd.randint(1, 900):010d},{cod},R-{rnd.randint(101, 120)},{rnd.choice([65, 130])},{rnd.randint(1, 3)}")
+        fila = (f"0{rnd.randint(1, 5)}/06/2026,{rnd.randint(4, 22):02d}:{rnd.randint(0, 59):02d}:{rnd.randint(0, 59):02d},"
+                f"{rnd.randint(1, 900):010d},{cod},R-{rnd.randint(101, 120)},{rnd.choice([65, 130])},{rnd.randint(1, 3)}")
+        # estados 7 y 9 = transacción rechazada (no consume números aleatorios: el resto de los datos no cambia)
+        if i % 40 == 1 or i % 55 == 2:
+            fila = fila.rsplit(",", 1)[0] + (",7" if i % 40 == 1 else ",9")
+        filas.append(fila)
     filas += [f"{rnd.randint(14, 30)}/07/2027,10:00:00,{rnd.randint(1, 900):010d},R-101-1,R-101,130,1" for _ in range(25)]
     filas.insert(100, "x,y")
     filas.insert(200, "")

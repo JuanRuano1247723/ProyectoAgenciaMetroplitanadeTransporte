@@ -19,7 +19,7 @@ import duckdb
 from bronze.config import Config
 
 
-def _tabla(columnas: list[str], filas: list[tuple], ancho_max: int = 160) -> str:
+def _tabla(columnas: list[str], filas: list[tuple], ancho_max: int = 60) -> str:
     def celda(v) -> str:
         t = "NULL" if v is None else str(v)
         return t if len(t) <= ancho_max else t[: ancho_max - 1] + "…"
@@ -60,21 +60,9 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("archivo_sql", type=Path)
     ap.add_argument("--db", type=Path)
-    ap.add_argument("--salida", type=Path, help="además de imprimir, guarda el resultado en este archivo (UTF-8)")
     a = ap.parse_args()
     cfg = Config.desde_entorno()
-    # Los archivos de Bronze (verificacion_post_bronze.sql) leen las vistas; todo lo demás, el warehouse.
-    db = a.db or (cfg.lake_dir / ("bronze_vistas.duckdb" if "bronze" in a.archivo_sql.name else "warehouse.duckdb"))
+    db = a.db or (cfg.lake_dir / ("warehouse.duckdb" if "silver" in a.archivo_sql.name else "bronze_vistas.duckdb"))
     if not db.exists():
         sys.exit(f"No existe {db}. Corre primero Bronze y `python -m flows.dbt_runner build`.")
-    if a.salida:
-        import contextlib, io
-        buf = io.StringIO()
-        with contextlib.redirect_stdout(buf):
-            errores = ejecutar(a.archivo_sql, db)
-        a.salida.parent.mkdir(parents=True, exist_ok=True)
-        a.salida.write_text(buf.getvalue(), encoding="utf-8")
-        print(buf.getvalue())
-        print(f"Guardado en {a.salida}")
-        sys.exit(1 if errores else 0)
     sys.exit(1 if ejecutar(a.archivo_sql, db) else 0)
