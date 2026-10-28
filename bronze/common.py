@@ -16,6 +16,7 @@ import logging
 import os
 import re
 import shutil
+import time
 import uuid
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -29,6 +30,20 @@ from .fuentes import Fuente
 
 log = logging.getLogger("bronze")
 
+
+
+def reemplazar_atomico(tmp: Path, destino: Path, intentos: int = 20, espera_s: float = 0.25) -> None:
+    """os.replace con reintentos. En Windows, OneDrive, el antivirus o el indexador pueden tener abierto el
+    archivo destino un instante y el rename falla con PermissionError (WinError 5/32). Es transitorio:
+    se reintenta unos segundos antes de rendirse."""
+    for i in range(intentos):
+        try:
+            os.replace(tmp, destino)
+            return
+        except PermissionError:
+            if i == intentos - 1:
+                raise
+            time.sleep(espera_s * (1 + i / 4))
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
@@ -69,7 +84,7 @@ def aterrizar(cfg: Config, fuente: Fuente, ruta: Path, file_hash: str, fecha_ing
     if sha256_archivo(tmp) != file_hash:
         tmp.unlink(missing_ok=True)
         raise IOError(f"La copia en landing de {ruta.name} no coincide con el hash de origen")
-    os.replace(tmp, destino)
+    reemplazar_atomico(tmp, destino)
     return destino
 
 
@@ -159,7 +174,7 @@ def escribir_parquet(tabla: pa.Table, destino: Path, compresion: str) -> None:
     tmp = destino.with_name(f".tmp-{uuid.uuid4().hex}.parquet")
     try:
         pq.write_table(tabla, tmp, compression=compresion)
-        os.replace(tmp, destino)
+        reemplazar_atomico(tmp, destino)
     finally:
         tmp.unlink(missing_ok=True)
 
@@ -259,4 +274,4 @@ def escribir_json_atomico(destino: Path, contenido: dict) -> None:
     destino.parent.mkdir(parents=True, exist_ok=True)
     tmp = destino.with_name(f".tmp-{uuid.uuid4().hex}")
     tmp.write_text(json.dumps(contenido, ensure_ascii=False), encoding="utf-8")
-    os.replace(tmp, destino)
+    reemplazar_atomico(tmp, destino)

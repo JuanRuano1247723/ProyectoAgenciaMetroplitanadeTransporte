@@ -17,6 +17,7 @@ import duckdb
 
 from bronze.config import RAIZ, Config, cargar_env
 from bronze.conciliacion import crear_vistas
+from bronze.fuentes import FUENTES
 
 DBT_DIR = RAIZ / "dbt_metro"
 
@@ -37,6 +38,33 @@ TABLAS_GOLD_DIM = ["dim_transporte", "dim_fecha", "dim_hora", "dim_estacion", "d
 TABLAS_GOLD_FACT = {"fact_abordaje": "evento_sk", "fact_viaje": "evento_sk"}
 
 
+
+def verificar_bronze_completo(cfg: Config) -> None:
+    """Falla con un mensaje que dice qué hacer si falta alguna tabla de Bronze, en vez del error críptico de dbt
+    ("Table with name ... does not exist") repetido decenas de veces."""
+    requeridas = {f"{f.operador}_{f.entidad}": f for f in FUENTES.values()}
+    ruta = cfg.lake_dir / "bronze_vistas.duckdb"
+    presentes: set = set()
+    if ruta.exists():
+        con = duckdb.connect(str(ruta), read_only=True)
+        try:
+            presentes = {r[0] for r in con.execute(
+                "select table_name from information_schema.tables where table_schema = 'bronze'").fetchall()}
+        finally:
+            con.close()
+    faltan = sorted(set(requeridas) - presentes)
+    if faltan:
+        streaming = [n for n in faltan if requeridas[n].via == "streaming"]
+        pistas = []
+        if streaming:
+            pistas.append("Streaming (Kafka): python -m bronze.cli consume ambos   (si el topic está vacío: python -m bronze.cli produce ambos --pausa 0 primero)")
+        if [n for n in faltan if n not in streaming]:
+            pistas.append("Batch y CDC: python -m bronze.cli batch   y   python -m bronze.cli cdc")
+        raise RuntimeError(
+            "Bronze está incompleto; faltan estas tablas: " + ", ".join(faltan) + ".\n  "
+            + "\n  ".join(pistas) + f"\n  Revisa también que LAKE_DIR apunte al lake correcto (ahora: {cfg.lake_dir}).")
+
+
 def dbt(cfg: Config, *args: str, variables: Optional[dict] = None) -> None:
     """Ejecuta dbt en un subproceso (así libera su conexión a DuckDB al terminar).
     Lanza excepción si hay errores; las advertencias no hacen fallar la ejecución."""
@@ -46,6 +74,8 @@ def dbt(cfg: Config, *args: str, variables: Optional[dict] = None) -> None:
             "Falta PSEUDONIMO_SECRETO. Es el secreto con el que se seudonimizan las llaves de usuario antes de Gold.\n"
             "  Copia .env.example a .env y define un valor largo y aleatorio, o en PowerShell:\n"
             "  $env:PSEUDONIMO_SECRETO = \"<valor largo y aleatorio>\"   (no lo subas a Git)")
+    if args and args[0] == "build":
+        verificar_bronze_completo(cfg)
     env = {**os.environ, "LAKE_DIR": str(cfg.lake_dir.resolve()), "DBT_PLUGINS_DIR": str(DBT_DIR / "plugins")}
     cmd = [sys.executable, "-c", "import sys; from dbt.cli.main import cli; sys.exit(cli())",
            *args, "--project-dir", str(DBT_DIR), "--profiles-dir", str(DBT_DIR),

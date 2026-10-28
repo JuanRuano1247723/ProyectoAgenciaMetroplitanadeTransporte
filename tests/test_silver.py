@@ -309,6 +309,13 @@ def test_sin_secreto_el_ejecutor_falla_con_un_mensaje_que_dice_que_hacer(tmp_pat
         construir_silver(cfg)
 
 
+def test_build_con_bronze_incompleto_dice_que_tablas_faltan_y_que_comando_correr(tmp_path):
+    cfg = Config(data_dir=tmp_path / "d", lake_dir=tmp_path / "lake")      # lake vacío: no hay nada en Bronze
+    with pytest.raises(RuntimeError, match="Bronze está incompleto") as e:
+        construir_silver(cfg)
+    assert "transmetro_validaciones" in str(e.value) and "bronze.cli consume ambos" in str(e.value)
+
+
 # NOTA: la prueba "sin modelos Gold" quedó superada por test_gold_grano_y_conteos y
 # test_verificador_de_linaje_con_gold_real_no_encuentra_violaciones, una vez que Gold existe de verdad
 # en la fixture compartida `silver`. Se cubre el caso "0 modelos Gold" en tests/test_seguridad.py

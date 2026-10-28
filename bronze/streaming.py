@@ -125,7 +125,15 @@ def publicar_archivo(cfg: Config, fuente: Fuente, *, cliente=None, tamano_rafaga
         cliente.flush()
         if errores:
             raise RuntimeError(f"{len(errores)} mensajes no entregados; primer error: {errores[0]}")
-        escribir_json_atomico(_ruta_checkpoint(cfg, fuente, h16), {"ultima_linea": n_linea})
+        try:
+            escribir_json_atomico(_ruta_checkpoint(cfg, fuente, h16), {"ultima_linea": n_linea})
+        except OSError as e:
+            # Los mensajes ya están en Kafka (flush); solo falló anotar el avance. Un reintento volverá a publicar
+            # desde el último checkpoint: repite mensajes en el topic, que el consumidor descarta (mismo archivo y línea).
+            raise RuntimeError(
+                f"No se pudo guardar el checkpoint del productor ({type(e).__name__}: {e}). Los mensajes hasta la línea "
+                f"{n_linea} YA están en Kafka. Si reintentas, se republicarán desde el checkpoint anterior; no daña "
+                f"Bronze (el consumidor descarta repetidos), pero conviene mover LAKE_DIR fuera de OneDrive.") from e
 
     try:
         with open(ruta, encoding="utf-8-sig", newline="", errors="replace") as f:
