@@ -64,17 +64,6 @@ En PowerShell, en lugar del `.env`: `$env:PSEUDONIMO_SECRETO = "<valor largo y a
 
 Variables opcionales: `DATA_DIR`, `LAKE_DIR`, `KAFKA_BOOTSTRAP`, `KAFKA_PARTICIONES`, `MICROLOTE_FILAS`, `MICROLOTE_SEGUNDOS`, `CHUNK_FILAS`.
 
-**Windows: el lake no debe vivir en OneDrive.** OneDrive y el antivirus abren cada archivo nuevo para sincronizarlo, y el
-renombrado atómico de los checkpoints falla con `PermissionError: [WinError 5]`. Define `LAKE_DIR` en una carpeta local, en la misma
-sesión (o en `.env`) para todos los comandos:
-
-```powershell
-mkdir C:\datos_metro\lake
-$env:LAKE_DIR = "C:\datos_metro\lake"
-```
-
-Si cambias de `LAKE_DIR`, repite la ingesta (`batch`, `cdc`, `produce`, `consume`) en el lake nuevo.
-
 Comprobar que todo está bien antes de empezar (no necesita Kafka):
 
 ```bash
